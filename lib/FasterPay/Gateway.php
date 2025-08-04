@@ -10,14 +10,12 @@ use FasterPay\Services\Subscription;
 use FasterPay\Services\Signature;
 use FasterPay\Services\Pingback;
 
-class Gateway
+class Gateway implements GatewayInterface
 {
 
     protected $config;
     protected $http;
     protected $baseUrl = '';
-    protected $project;
-    protected $extraParams = [];
 
     public function __construct($config = [])
     {

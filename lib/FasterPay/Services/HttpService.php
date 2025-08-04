@@ -2,15 +2,20 @@
 
 namespace FasterPay\Services;
 
+use FasterPay\BusinessGateway;
 use FasterPay\Gateway;
 
 class HttpService implements HttpServiceInterface
 {
+    /**
+     * @var Gateway|BusinessGateway
+     */
     protected $client;
-    protected $endpoint;
 
-
-    public function __construct(Gateway $client)
+    /**
+     * @param Gateway|BusinessGateway $client
+     */
+    public function __construct($client)
     {
         $this->client = $client;
     }
@@ -28,7 +33,7 @@ class HttpService implements HttpServiceInterface
     public function __call($function, $params)
     {
         if (method_exists($this, $function)) {
-            return call_user_func_array(array($this, $function), $params);
+            return call_user_func_array([$this, $function], $params);
         }
     }
 }

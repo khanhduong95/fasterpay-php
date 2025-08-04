@@ -19,7 +19,7 @@ class Payment extends GeneralService
         }
 
         $endpoint = $this->httpService->getEndPoint($this->endpoint . '/' . $orderId . '/refund');
-        $params = array('amount' => $amount);
+        $params = ['amount' => $amount];
 
         $response = $this->httpService->getHttpClient()->post($endpoint, $params);
 

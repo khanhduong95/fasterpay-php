@@ -13,7 +13,10 @@ class PaymentResponse extends Response
 
         if ($httpCode != self::SUCCESS_CODE) {
             $errorMessage = empty($response['message']) ? self::RESPONSE_ERROR_TEXT : $response['message'];
-            $this->errors = new ResponseError(array('message' => $errorMessage, 'code' => $httpCode));
+            $this->errors = new ResponseError([
+                'message' => $errorMessage,
+                'code' => $httpCode,
+            ]);
         } else {
             $this->success = true;
         }

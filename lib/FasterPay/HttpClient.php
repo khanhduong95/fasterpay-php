@@ -86,10 +86,10 @@ class HttpClient
         $info = curl_getinfo($ch);
         curl_close($ch);
 
-        return array(
+        return [
             'response' => $response,
             'httpCode' => $info['http_code']
-        );
+        ];
     }
 
 }

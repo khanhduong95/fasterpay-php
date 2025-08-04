@@ -1,7 +1,7 @@
 <?php
 namespace FasterPay\Services;
 
-use FasterPay\Gateway;
+use FasterPay\GatewayInterface;
 
 class Signature
 {
@@ -13,7 +13,7 @@ class Signature
 
     private $gateway = null;
 
-    public function __construct(Gateway $gateway)
+    public function __construct(GatewayInterface $gateway)
     {
         $this->gateway = $gateway;
     }
