@@ -11,25 +11,18 @@ $businessGateway = new FasterPay\BusinessGateway([
 echo "FasterPay Contact API Examples\n";
 echo "===============================\n\n";
 
-// Example 1: Create a new contact
-echo "1. Creating a new contact\n";
-echo "-------------------------\n";
+// Example 1: Create a new individual contact
+echo "1. Creating a new individual contact\n";
+echo "------------------------------------\n";
 
 $contactData = [
-    'type' => 'individual',
-    'first_name' => 'Jane',
+    'email' => 'john.smith@example.com',
+    'phone' => '2015550124',
+    'phone_country_code' => 'US',
+    'first_name' => 'John',
     'last_name' => 'Smith',
-    'email' => 'jane.smith@example.com',
-    'phone' => '+1-555-234-5678',
-    'company' => 'Tech Solutions Inc',
-    'job_title' => 'Product Manager',
-    'status' => 'active',
-    'tags' => ['customer', 'premium'],
-    'notes' => 'High-value customer, prefers email communication',
-    'custom_fields' => [
-        'customer_since' => '2023-01-15',
-        'preferred_contact_method' => 'email'
-    ]
+    'country' => 'US',
+    'favorite' => true
 ];
 
 try {
@@ -38,11 +31,12 @@ try {
     if ($contactResponse->isSuccessful()) {
         echo "✓ Contact created successfully\n";
         $responseData = $contactResponse->getDecodeResponse();
-        $contactId = $responseData['contact_id'] ?? 'contact_' . time();
-        echo "  Contact ID: $contactId\n";
-        echo "  Name: {$contactData['first_name']} {$contactData['last_name']}\n";
-        echo "  Email: {$contactData['email']}\n";
-        echo "  Phone: {$contactData['phone']}\n";
+        $contactId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'CT-' . time();
+        echo "  Contact ID: " . $contactId . "\n";
+        echo "  Name: " . $contactData['first_name'] . " " . $contactData['last_name'] . "\n";
+        echo "  Email: " . $contactData['email'] . "\n";
+        echo "  Phone: " . $contactData['phone'] . "\n";
+        echo "  Country: " . $contactData['country'] . "\n";
     } else {
         echo "✗ Error: " . $contactResponse->getErrors()->getMessage() . "\n";
     }
@@ -52,95 +46,33 @@ try {
 
 echo "\n";
 
-// Example 2: Create a business contact
-echo "2. Creating a business contact\n";
-echo "------------------------------\n";
-
-$businessContactData = [
-    'type' => 'business',
-    'name' => 'Global Enterprise Solutions',
-    'email' => 'contact@globalenterprise.com',
-    'phone' => '+1-555-987-6543',
-    'website' => 'https://globalenterprise.com',
-    'industry' => 'Technology',
-    'employee_count' => '500-1000',
-    'annual_revenue' => '50000000',
-    'status' => 'active',
-    'primary_contact' => [
-        'first_name' => 'Robert',
-        'last_name' => 'Johnson',
-        'email' => 'robert.johnson@globalenterprise.com',
-        'job_title' => 'CFO'
-    ]
-];
-
-try {
-    $businessContactResponse = $businessGateway->contactService()->createContact($businessContactData);
-
-    if ($businessContactResponse->isSuccessful()) {
-        echo "✓ Business contact created successfully\n";
-        $responseData = $businessContactResponse->getDecodeResponse();
-        $businessContactId = $responseData['contact_id'] ?? 'business_contact_' . time();
-        echo "  Contact ID: $businessContactId\n";
-        echo "  Company: {$businessContactData['name']}\n";
-        echo "  Industry: {$businessContactData['industry']}\n";
-        echo "  Primary Contact: {$businessContactData['primary_contact']['first_name']} {$businessContactData['primary_contact']['last_name']}\n";
-    } else {
-        echo "✗ Error: " . $businessContactResponse->getErrors()->getMessage() . "\n";
-    }
-} catch (FasterPay\Exception $e) {
-    echo "✗ Exception: " . $e->getMessage() . "\n";
-}
-
-echo "\n";
-
-// Example 3: Get contact by email
-echo "3. Finding contact by email\n";
+// Example 2: Create another contact
+echo "2. Creating another contact\n";
 echo "---------------------------\n";
 
-try {
-    $emailResponse = $businessGateway->contactService()->getContactByEmail('jane.smith@example.com');
-
-    if ($emailResponse->isSuccessful()) {
-        echo "✓ Contact found by email\n";
-        $contactData = $emailResponse->getDecodeResponse();
-        echo "  Email: jane.smith@example.com\n";
-        echo "  Name: " . ($contactData['first_name'] ?? 'Jane') . " " . ($contactData['last_name'] ?? 'Smith') . "\n";
-        echo "  Status: " . ($contactData['status'] ?? 'active') . "\n";
-    } else {
-        echo "✗ Error: " . $emailResponse->getErrors()->getMessage() . "\n";
-    }
-} catch (FasterPay\Exception $e) {
-    echo "✗ Exception: " . $e->getMessage() . "\n";
-}
-
-echo "\n";
-
-// Example 4: Add address to contact
-echo "4. Adding address to contact\n";
-echo "----------------------------\n";
-
-$contactId = 'contact_' . time(); // In real scenario, use actual contact ID
-$addressData = [
-    'type' => 'home',
-    'street' => '456 Oak Avenue',
-    'city' => 'San Francisco',
-    'state' => 'CA',
-    'postal_code' => '94102',
-    'country_code' => 'US',
-    'is_primary' => true
+$secondContactData = [
+    'email' => 'jane.doe@example.com',
+    'phone' => '2015550987',
+    'phone_country_code' => 'US',
+    'first_name' => 'Jane',
+    'last_name' => 'Doe',
+    'country' => 'US',
+    'favorite' => false
 ];
 
 try {
-    $addressResponse = $businessGateway->contactService()->addContactAddress($contactId, $addressData);
+    $secondContactResponse = $businessGateway->contactService()->createContact($secondContactData);
 
-    if ($addressResponse->isSuccessful()) {
-        echo "✓ Address added to contact successfully\n";
-        echo "  Contact ID: $contactId\n";
-        echo "  Address: {$addressData['street']}, {$addressData['city']}, {$addressData['state']}\n";
-        echo "  Type: {$addressData['type']}\n";
+    if ($secondContactResponse->isSuccessful()) {
+        echo "✓ Second contact created successfully\n";
+        $responseData = $secondContactResponse->getDecodeResponse();
+        $secondContactId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'CT-2-' . time();
+        echo "  Contact ID: " . $secondContactId . "\n";
+        echo "  Name: " . $secondContactData['first_name'] . " " . $secondContactData['last_name'] . "\n";
+        echo "  Email: " . $secondContactData['email'] . "\n";
+        echo "  Phone: " . $secondContactData['phone'] . "\n";
     } else {
-        echo "✗ Error: " . $addressResponse->getErrors()->getMessage() . "\n";
+        echo "✗ Error: " . $secondContactResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
     echo "✗ Exception: " . $e->getMessage() . "\n";
@@ -148,28 +80,27 @@ try {
 
 echo "\n";
 
-// Example 5: Search contacts
-echo "5. Searching contacts\n";
-echo "---------------------\n";
-
-$searchParams = [
-    'query' => 'smith',
-    'type' => 'individual',
-    'status' => 'active',
-    'tags' => ['customer'],
-    'limit' => 10
-];
+// Example 3: Get contact details
+echo "3. Getting contact details\n";
+echo "--------------------------\n";
 
 try {
-    $searchResponse = $businessGateway->contactService()->searchContacts($searchParams);
+    $detailsResponse = $businessGateway->contactService()->getContact($contactId);
 
-    if ($searchResponse->isSuccessful()) {
-        echo "✓ Contact search completed\n";
-        echo "  Query: 'smith'\n";
-        echo "  Filter: Active individual customers\n";
-        echo "  (In a real scenario, this would return matching contacts)\n";
+    if ($detailsResponse->isSuccessful()) {
+        echo "✓ Contact details retrieved successfully\n";
+        $details = $detailsResponse->getDecodeResponse();
+        
+        if (isset($details['data'])) {
+            $contact = $details['data'];
+            echo "  ID: " . (isset($contact['id']) ? $contact['id'] : 'N/A') . "\n";
+            echo "  Name: " . (isset($contact['first_name']) ? $contact['first_name'] : '') . " " . (isset($contact['last_name']) ? $contact['last_name'] : '') . "\n";
+            echo "  Email: " . (isset($contact['email']) ? $contact['email'] : 'N/A') . "\n";
+            echo "  Phone: " . (isset($contact['phone_full_number']) ? $contact['phone_full_number'] : 'N/A') . "\n";
+            echo "  Country: " . (isset($contact['country']) ? $contact['country'] : 'N/A') . "\n";
+        }
     } else {
-        echo "✗ Error: " . $searchResponse->getErrors()->getMessage() . "\n";
+        echo "✗ Error: " . $detailsResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
     echo "✗ Exception: " . $e->getMessage() . "\n";
@@ -177,18 +108,14 @@ try {
 
 echo "\n";
 
-// Example 6: Update contact
-echo "6. Updating contact information\n";
+// Example 4: Update contact
+echo "4. Updating contact information\n";
 echo "-------------------------------\n";
 
 $updateData = [
-    'job_title' => 'Senior Product Manager',
-    'phone' => '+1-555-234-9999',
-    'notes' => 'Promoted to Senior PM. Updated contact preferences.',
-    'custom_fields' => [
-        'last_interaction' => date('Y-m-d'),
-        'account_value' => '15000'
-    ]
+    'phone' => '2015559999',
+    'favorite' => false,
+    'first_name' => 'Jonathan'
 ];
 
 try {
@@ -196,9 +123,10 @@ try {
 
     if ($updateResponse->isSuccessful()) {
         echo "✓ Contact updated successfully\n";
-        echo "  Contact ID: $contactId\n";
-        echo "  New job title: {$updateData['job_title']}\n";
-        echo "  Updated phone: {$updateData['phone']}\n";
+        echo "  Contact ID: " . $contactId . "\n";
+        echo "  New phone: " . $updateData['phone'] . "\n";
+        echo "  Updated name: " . $updateData['first_name'] . "\n";
+        echo "  Favorite: " . ($updateData['favorite'] ? 'Yes' : 'No') . "\n";
     } else {
         echo "✗ Error: " . $updateResponse->getErrors()->getMessage() . "\n";
     }
@@ -208,19 +136,47 @@ try {
 
 echo "\n";
 
-// Example 7: List contacts with filters
-echo "7. Listing contacts with filters\n";
+// Example 5: Create another contact for listing
+echo "5. Creating a third contact for demonstration\n";
+echo "---------------------------------------------\n";
+
+$thirdContactData = [
+    'email' => 'mike.wilson@example.com',
+    'phone' => '2015550555',
+    'phone_country_code' => 'US',
+    'first_name' => 'Mike',
+    'last_name' => 'Wilson',
+    'country' => 'US',
+    'favorite' => true
+];
+
+try {
+    $thirdContactResponse = $businessGateway->contactService()->createContact($thirdContactData);
+
+    if ($thirdContactResponse->isSuccessful()) {
+        echo "✓ Third contact created successfully\n";
+        $responseData = $thirdContactResponse->getDecodeResponse();
+        $thirdContactId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'CT-3-' . time();
+        echo "  Contact ID: " . $thirdContactId . "\n";
+        echo "  Name: " . $thirdContactData['first_name'] . " " . $thirdContactData['last_name'] . "\n";
+        echo "  Email: " . $thirdContactData['email'] . "\n";
+        echo "  Favorite: " . ($thirdContactData['favorite'] ? 'Yes' : 'No') . "\n";
+    } else {
+        echo "✗ Error: " . $thirdContactResponse->getErrors()->getMessage() . "\n";
+    }
+} catch (FasterPay\Exception $e) {
+    echo "✗ Exception: " . $e->getMessage() . "\n";
+}
+
+echo "\n";
+
+// Example 6: List contacts with filters
+echo "6. Listing contacts with filters\n";
 echo "--------------------------------\n";
 
 $filters = [
-    'type' => 'individual',
-    'status' => 'active',
-    'has_email' => true,
-    'created_after' => '2023-01-01',
     'limit' => 25,
-    'offset' => 0,
-    'sort' => 'last_name',
-    'order' => 'asc'
+    'offset' => 0
 ];
 
 try {
@@ -228,11 +184,24 @@ try {
 
     if ($listResponse->isSuccessful()) {
         echo "✓ Contact list retrieved successfully\n";
-        echo "  Filter: Active individuals with email addresses\n";
-        echo "  Created after: 2023-01-01\n";
-        echo "  Sorted by: Last name (ascending)\n";
         echo "  Limit: 25 contacts\n";
-        echo "  (In a real scenario, this would show actual contact data)\n";
+        
+        $listData = $listResponse->getDecodeResponse();
+        if (isset($listData['data']) && is_array($listData['data'])) {
+            echo "  Found " . count($listData['data']) . " contacts\n";
+            
+            // Display first few contacts
+            $contacts = array_slice($listData['data'], 0, 3);
+            foreach ($contacts as $contact) {
+                $name = (isset($contact['first_name']) ? $contact['first_name'] : '') . ' ' . (isset($contact['last_name']) ? $contact['last_name'] : '');
+                $email = isset($contact['email']) ? $contact['email'] : 'No email';
+                echo "    - " . trim($name) . " (" . $email . ")\n";
+            }
+            
+            if (count($listData['data']) > 3) {
+                echo "    ... and " . (count($listData['data']) - 3) . " more\n";
+            }
+        }
     } else {
         echo "✗ Error: " . $listResponse->getErrors()->getMessage() . "\n";
     }
@@ -242,19 +211,20 @@ try {
 
 echo "\n";
 
-// Example 8: Get contact addresses
-echo "8. Getting contact addresses\n";
-echo "----------------------------\n";
+// Example 7: Delete a contact
+echo "7. Deleting a contact\n";
+echo "---------------------\n";
+
+$contactToDelete = isset($thirdContactId) ? $thirdContactId : 'CT-DELETE-' . time();
 
 try {
-    $addressesResponse = $businessGateway->contactService()->getContactAddresses($contactId);
+    $deleteResponse = $businessGateway->contactService()->deleteContact($contactToDelete);
 
-    if ($addressesResponse->isSuccessful()) {
-        echo "✓ Contact addresses retrieved successfully\n";
-        echo "  Contact ID: $contactId\n";
-        echo "  (In a real scenario, this would show all addresses for the contact)\n";
+    if ($deleteResponse->isSuccessful()) {
+        echo "✓ Contact deleted successfully\n";
+        echo "  Deleted Contact ID: " . $contactToDelete . "\n";
     } else {
-        echo "✗ Error: " . $addressesResponse->getErrors()->getMessage() . "\n";
+        echo "✗ Error: " . $deleteResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
     echo "✗ Exception: " . $e->getMessage() . "\n";
