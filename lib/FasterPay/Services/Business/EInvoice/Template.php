@@ -13,39 +13,14 @@ class Template extends GeneralService
     /**
      * Create a new invoice template
      *
-     * @param array $params Template parameters
+     * @param array $params Template parameters (files auto-detected)
      * @return GeneralResponse
      * @throws Exception
      */
     public function createTemplate(array $params = [])
     {
-        if (empty($params['name'])) {
-            throw new Exception('Template name is required');
-        }
-
-        if (empty($params['country_code'])) {
-            throw new Exception('Country code is required');
-        }
-
-        // Validate country code format
-        if (strlen($params['country_code']) !== 2) {
-            throw new Exception('Country code must be 2 characters (ISO 3166-1 alpha-2)');
-        }
-
-        // Validate colors if provided
-        if (!empty($params['colors'])) {
-            if (!empty($params['colors']['primary']) && !$this->isValidHexColor($params['colors']['primary'])) {
-                throw new Exception('Primary color must be a valid hex color');
-            }
-            if (!empty($params['colors']['secondary']) && !$this->isValidHexColor($params['colors']['secondary'])) {
-                throw new Exception('Secondary color must be a valid hex color');
-            }
-        }
-
         $endpoint = $this->httpService->getEndPoint($this->endpoint);
-
         $response = $this->httpService->getHttpClient()->post($endpoint, $params);
-
         return new GeneralResponse($response);
     }
 
@@ -73,7 +48,7 @@ class Template extends GeneralService
      * Update template
      *
      * @param string $templateId Template ID
-     * @param array $params Updated template parameters
+     * @param array $params Updated template parameters (files auto-detected)
      * @return GeneralResponse
      * @throws Exception
      */
@@ -83,20 +58,8 @@ class Template extends GeneralService
             throw new Exception('Template ID is required');
         }
 
-        // Validate colors if provided
-        if (!empty($params['colors'])) {
-            if (!empty($params['colors']['primary']) && !$this->isValidHexColor($params['colors']['primary'])) {
-                throw new Exception('Primary color must be a valid hex color');
-            }
-            if (!empty($params['colors']['secondary']) && !$this->isValidHexColor($params['colors']['secondary'])) {
-                throw new Exception('Secondary color must be a valid hex color');
-            }
-        }
-
         $endpoint = $this->httpService->getEndPoint($this->endpoint . '/' . $templateId);
-
         $response = $this->httpService->getHttpClient()->put($endpoint, $params);
-
         return new GeneralResponse($response);
     }
 
@@ -123,26 +86,13 @@ class Template extends GeneralService
     /**
      * List templates
      *
-     * @param array $filters Optional filters
+     * @param array $filters Optional filters (page, per_page, filter)
      * @return GeneralResponse
      */
     public function listTemplates(array $filters = [])
     {
         $endpoint = $this->httpService->getEndPoint($this->endpoint);
-
         $response = $this->httpService->getHttpClient()->get($endpoint, $filters);
-
         return new GeneralResponse($response);
-    }
-
-    /**
-     * Validate hex color format
-     *
-     * @param string $color Hex color string
-     * @return bool
-     */
-    private function isValidHexColor($color)
-    {
-        return preg_match('/^#[a-f0-9]{6}$/i', $color);
     }
 }

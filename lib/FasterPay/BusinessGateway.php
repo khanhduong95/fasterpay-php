@@ -17,7 +17,7 @@ use FasterPay\Services\Pingback;
 
 class BusinessGateway implements GatewayInterface
 {
-    const BUSINESS_API_BASE_URL = 'https://business.fasterpay.com';
+    const BUSINESS_API_BASE_URL = 'https://develop.ma.fasterpay.bamboo.stuffio.com';
     const BUSINESS_API_SANDBOX_BASE_URL = 'https://business.sandbox.fasterpay.com';
 
     protected $config;

@@ -5,7 +5,7 @@ class Config
 {
 
 	const VERSION = '1.0.0';
-	const API_BASE_URL = 'https://pay.fasterpay.com';
+	const API_BASE_URL = 'https://develop.pay2.fasterpay.bamboo.stuffio.com';
 	const API_SANDBOX_BASE_URL = 'https://pay.sandbox.fasterpay.com';
 
 	private $publicKey 	= null;
