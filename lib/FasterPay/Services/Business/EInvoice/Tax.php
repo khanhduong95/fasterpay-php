@@ -15,37 +15,9 @@ class Tax extends GeneralService
      *
      * @param array $params Tax parameters
      * @return GeneralResponse
-     * @throws Exception
      */
     public function createTax(array $params = [])
     {
-        if (empty($params['name'])) {
-            throw new Exception('Tax name is required');
-        }
-
-        if (empty($params['type'])) {
-            throw new Exception('Tax type is required');
-        }
-
-        if (!isset($params['value']) || !is_numeric($params['value'])) {
-            throw new Exception('Tax value is required and must be numeric');
-        }
-
-        // Validate tax type
-        $validTypes = ['flat', 'percentage'];
-        if (!in_array($params['type'], $validTypes)) {
-            throw new Exception('Tax type must be either "flat" or "percentage"');
-        }
-
-        // Validate value based on type
-        if ($params['type'] === 'percentage' && ($params['value'] < 0 || $params['value'] > 100)) {
-            throw new Exception('Percentage tax value must be between 0 and 100');
-        }
-
-        if ($params['type'] === 'flat' && $params['value'] < 0) {
-            throw new Exception('Flat tax value must be non-negative');
-        }
-
         $endpoint = $this->httpService->getEndPoint($this->endpoint);
 
         $response = $this->httpService->getHttpClient()->post($endpoint, $params);
@@ -85,31 +57,6 @@ class Tax extends GeneralService
     {
         if (empty($taxId)) {
             throw new Exception('Tax ID is required');
-        }
-
-        // Validate tax type if provided
-        if (!empty($params['type'])) {
-            $validTypes = ['flat', 'percentage'];
-            if (!in_array($params['type'], $validTypes)) {
-                throw new Exception('Tax type must be either "flat" or "percentage"');
-            }
-        }
-
-        // Validate value if provided
-        if (isset($params['value'])) {
-            if (!is_numeric($params['value'])) {
-                throw new Exception('Tax value must be numeric');
-            }
-
-            if (!empty($params['type'])) {
-                if ($params['type'] === 'percentage' && ($params['value'] < 0 || $params['value'] > 100)) {
-                    throw new Exception('Percentage tax value must be between 0 and 100');
-                }
-
-                if ($params['type'] === 'flat' && $params['value'] < 0) {
-                    throw new Exception('Flat tax value must be non-negative');
-                }
-            }
         }
 
         $endpoint = $this->httpService->getEndPoint($this->endpoint . '/' . $taxId);

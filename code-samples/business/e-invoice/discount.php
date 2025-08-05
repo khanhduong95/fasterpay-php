@@ -18,7 +18,7 @@ echo "---------------------------\n";
 $flatDiscountData = [
     'name' => 'Early Bird Discount',
     'type' => 'flat',
-    'value' => 0.1,
+    'value' => 10.00,
     'currency' => 'USD',
     'description' => '$10 discount for early payment'
 ];
@@ -29,12 +29,12 @@ try {
     if ($discountResponse->isSuccessful()) {
         echo "✓ Flat discount created successfully\n";
         $responseData = $discountResponse->getDecodeResponse();
-        $discountId = $responseData['data']['id'] ?? 'DC-' . time();
-        echo "  Discount ID: $discountId\n";
-        echo "  Name: {$flatDiscountData['name']}\n";
-        echo "  Type: {$flatDiscountData['type']}\n";
-        echo "  Value: $" . $flatDiscountData['value'] . " {$flatDiscountData['currency']}\n";
-        echo "  Description: {$flatDiscountData['description']}\n";
+        $discountId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'DC-' . time();
+        echo "  Discount ID: " . $discountId . "\n";
+        echo "  Name: " . $flatDiscountData['name'] . "\n";
+        echo "  Type: " . $flatDiscountData['type'] . "\n";
+        echo "  Value: $" . number_format($flatDiscountData['value'], 2) . " " . $flatDiscountData['currency'] . "\n";
+        echo "  Description: " . $flatDiscountData['description'] . "\n";
     } else {
         echo "✗ Error: " . $discountResponse->getErrors()->getMessage() . "\n";
     }
@@ -61,12 +61,12 @@ try {
     if ($volumeResponse->isSuccessful()) {
         echo "✓ Percentage discount created successfully\n";
         $responseData = $volumeResponse->getDecodeResponse();
-        $volumeDiscountId = $responseData['data']['id'] ?? 'DC-VOLUME-' . time();
-        echo "  Discount ID: $volumeDiscountId\n";
-        echo "  Name: {$percentageDiscountData['name']}\n";
-        echo "  Type: {$percentageDiscountData['type']}\n";
-        echo "  Value: {$percentageDiscountData['value']}%\n";
-        echo "  Description: {$percentageDiscountData['description']}\n";
+        $volumeDiscountId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'DC-VOLUME-' . time();
+        echo "  Discount ID: " . $volumeDiscountId . "\n";
+        echo "  Name: " . $percentageDiscountData['name'] . "\n";
+        echo "  Type: " . $percentageDiscountData['type'] . "\n";
+        echo "  Value: " . $percentageDiscountData['value'] . "%\n";
+        echo "  Description: " . $percentageDiscountData['description'] . "\n";
     } else {
         echo "✗ Error: " . $volumeResponse->getErrors()->getMessage() . "\n";
     }
@@ -81,10 +81,10 @@ echo "3. Creating loyalty discount\n";
 echo "----------------------------\n";
 
 $loyaltyDiscountData = [
-    'name' => 'Loyal Customer Discount',
+    'name' => 'Loyalty Customer Discount',
     'type' => 'percentage',
-    'value' => 10,
-    'description' => '10% discount for returning customers'
+    'value' => 25,
+    'description' => '25% discount for loyal customers'
 ];
 
 try {
@@ -93,9 +93,12 @@ try {
     if ($loyaltyResponse->isSuccessful()) {
         echo "✓ Loyalty discount created successfully\n";
         $responseData = $loyaltyResponse->getDecodeResponse();
-        $loyaltyDiscountId = $responseData['data']['id'] ?? 'DC-LOYALTY-' . time();
-        echo "  Discount ID: $loyaltyDiscountId\n";
-        echo "  Value: {$loyaltyDiscountData['value']}% for loyal customers\n";
+        $loyaltyDiscountId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'DC-LOYALTY-' . time();
+        echo "  Discount ID: " . $loyaltyDiscountId . "\n";
+        echo "  Name: " . $loyaltyDiscountData['name'] . "\n";
+        echo "  Type: " . $loyaltyDiscountData['type'] . "\n";
+        echo "  Value: " . $loyaltyDiscountData['value'] . "%\n";
+        echo "  Description: " . $loyaltyDiscountData['description'] . "\n";
     } else {
         echo "✗ Error: " . $loyaltyResponse->getErrors()->getMessage() . "\n";
     }
@@ -106,27 +109,30 @@ try {
 echo "\n";
 
 // Example 4: Get discount details
-echo "4. Getting discount details\n";
-echo "---------------------------\n";
+echo "4. Retrieving discount details\n";
+echo "------------------------------\n";
 
-$discountId = $discountId ?? 'DC-' . time();
+$testDiscountId = isset($discountId) ? $discountId : 'DC-250527-WZX0';
 
 try {
-    $detailsResponse = $businessGateway->eInvoiceDiscountService()->getDiscount($discountId);
+    $getDiscountResponse = $businessGateway->eInvoiceDiscountService()->getDiscount($testDiscountId);
 
-    if ($detailsResponse->isSuccessful()) {
-        echo "✓ Discount details retrieved\n";
-        $details = $detailsResponse->getDecodeResponse();
-        $discount = $details['data'] ?? [];
-
-        echo "  ID: " . ($discount['id'] ?? $discountId) . "\n";
-        echo "  Name: " . ($discount['name'] ?? 'N/A') . "\n";
-        echo "  Type: " . ($discount['type'] ?? 'N/A') . "\n";
-        echo "  Value: " . ($discount['value'] ?? 'N/A') . "\n";
-        echo "  Currency: " . ($discount['currency'] ?? 'N/A') . "\n";
-        echo "  Description: " . ($discount['description'] ?? 'N/A') . "\n";
+    if ($getDiscountResponse->isSuccessful()) {
+        echo "✓ Discount details retrieved successfully\n";
+        $discountData = $getDiscountResponse->getDecodeResponse();
+        if (isset($discountData['data'])) {
+            $discount = $discountData['data'];
+            echo "  Discount ID: " . (isset($discount['id']) ? $discount['id'] : $testDiscountId) . "\n";
+            echo "  Name: " . (isset($discount['name']) ? $discount['name'] : 'N/A') . "\n";
+            echo "  Type: " . (isset($discount['type']) ? $discount['type'] : 'N/A') . "\n";
+            echo "  Value: " . (isset($discount['value']) ? $discount['value'] : 'N/A') . "\n";
+            if (isset($discount['currency'])) {
+                echo "  Currency: " . $discount['currency'] . "\n";
+            }
+            echo "  Description: " . (isset($discount['description']) ? $discount['description'] : 'N/A') . "\n";
+        }
     } else {
-        echo "✗ Error: " . $detailsResponse->getErrors()->getMessage() . "\n";
+        echo "✗ Error: " . $getDiscountResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
     echo "✗ Exception: " . $e->getMessage() . "\n";
@@ -138,18 +144,21 @@ echo "\n";
 echo "5. Updating discount\n";
 echo "--------------------\n";
 
-$updateData = [
-    'value' => 0.15,
-    'description' => 'Updated to $15 early payment discount'
+$updateDiscountData = [
+    'name' => 'Updated Early Bird Discount',
+    'description' => 'Updated early payment discount with better terms',
+    'value' => 15.00
 ];
 
 try {
-    $updateResponse = $businessGateway->eInvoiceDiscountService()->updateDiscount($discountId, $updateData);
+    $updateResponse = $businessGateway->eInvoiceDiscountService()->updateDiscount($testDiscountId, $updateDiscountData);
 
     if ($updateResponse->isSuccessful()) {
         echo "✓ Discount updated successfully\n";
-        echo "  New value: $" . $updateData['value'] . "\n";
-        echo "  Updated description: {$updateData['description']}\n";
+        echo "  Discount ID: " . $testDiscountId . "\n";
+        echo "  Updated Name: " . $updateDiscountData['name'] . "\n";
+        echo "  Updated Value: $" . number_format($updateDiscountData['value'], 2) . "\n";
+        echo "  Updated Description: " . $updateDiscountData['description'] . "\n";
     } else {
         echo "✗ Error: " . $updateResponse->getErrors()->getMessage() . "\n";
     }
@@ -159,34 +168,30 @@ try {
 
 echo "\n";
 
-// Example 6: List all discounts
-echo "6. Listing all discounts\n";
-echo "------------------------\n";
+// Example 6: List discounts
+echo "6. Listing discounts\n";
+echo "--------------------\n";
+
+$filters = [
+    'limit' => 10,
+    'offset' => 0
+];
 
 try {
-    $listResponse = $businessGateway->eInvoiceDiscountService()->listDiscounts();
+    $listResponse = $businessGateway->eInvoiceDiscountService()->listDiscounts($filters);
 
     if ($listResponse->isSuccessful()) {
-        echo "✓ Discount list retrieved\n";
+        echo "✓ Discount list retrieved successfully\n";
         $listData = $listResponse->getDecodeResponse();
-        $discounts = $listData['data']['data'] ?? [];
-
-        echo "  Total discounts: " . count($discounts) . "\n";
-
-        if (!empty($discounts)) {
-            echo "  Available discounts:\n";
-            foreach ($discounts as $discount) {
-                $id = $discount['id'] ?? 'Unknown';
-                $name = $discount['name'] ?? 'Unnamed';
-                $type = $discount['type'] ?? 'N/A';
-                $value = $discount['value'] ?? 0;
-                $currency = $discount['currency'] ?? '';
-
-                if ($type === 'percentage') {
-                    echo "    - $name ($id): $value% off\n";
-                } else {
-                    echo "    - $name ($id): $" . $value . " $currency off\n";
-                }
+        if (isset($listData['data']) && is_array($listData['data'])) {
+            echo "  Found " . count($listData['data']) . " discounts:\n";
+            foreach ($listData['data'] as $discount) {
+                $id = isset($discount['id']) ? $discount['id'] : 'Unknown';
+                $name = isset($discount['name']) ? $discount['name'] : 'Unnamed';
+                $type = isset($discount['type']) ? $discount['type'] : 'Unknown';
+                $value = isset($discount['value']) ? $discount['value'] : '0';
+                $currency = isset($discount['currency']) ? ' ' . $discount['currency'] : '';
+                echo "    - " . $name . " (" . $id . ") - " . $type . ": " . $value . $currency . "\n";
             }
         }
     } else {
@@ -198,116 +203,128 @@ try {
 
 echo "\n";
 
-// Example 7: Create seasonal discounts
-echo "7. Creating seasonal discounts\n";
-echo "------------------------------\n";
+// Example 7: Delete discount
+echo "7. Deleting discount\n";
+echo "--------------------\n";
 
-$seasonalDiscounts = [
-    [
-        'name' => 'Black Friday Special',
-        'type' => 'percentage',
-        'value' => 25,
-        'description' => '25% off everything - Black Friday special'
-    ],
-    [
-        'name' => 'New Year Discount',
-        'type' => 'flat',
-        'value' => 50,
-        'currency' => 'USD',
-        'description' => '$50 off to start the new year right'
-    ],
-    [
-        'name' => 'Summer Sale',
-        'type' => 'percentage',
-        'value' => 20,
-        'description' => '20% summer discount on all services'
-    ]
-];
+$deleteTestDiscountId = isset($loyaltyDiscountId) ? $loyaltyDiscountId : 'DC-DELETE-' . time();
 
-$createdSeasonalDiscounts = [];
+try {
+    $deleteResponse = $businessGateway->eInvoiceDiscountService()->deleteDiscount($deleteTestDiscountId);
 
-foreach ($seasonalDiscounts as $discountData) {
-    try {
-        $response = $businessGateway->eInvoiceDiscountService()->createDiscount($discountData);
-
-        if ($response->isSuccessful()) {
-            $responseData = $response->getDecodeResponse();
-            $discountId = $responseData['data']['id'] ?? 'DC-SEASONAL-' . time();
-            $createdSeasonalDiscounts[] = $discountId;
-
-            if ($discountData['type'] === 'percentage') {
-                echo "✓ {$discountData['name']}: {$discountData['value']}% off (ID: $discountId)\n";
-            } else {
-                echo "✓ {$discountData['name']}: $" . $discountData['value'] . " off (ID: $discountId)\n";
-            }
-        } else {
-            echo "✗ Failed to create {$discountData['name']}: " . $response->getErrors()->getMessage() . "\n";
-        }
-    } catch (FasterPay\Exception $e) {
-        echo "✗ Exception creating {$discountData['name']}: " . $e->getMessage() . "\n";
+    if ($deleteResponse->isSuccessful()) {
+        echo "✓ Discount deleted successfully\n";
+        echo "  Deleted Discount ID: " . $deleteTestDiscountId . "\n";
+    } else {
+        echo "✗ Error: " . $deleteResponse->getErrors()->getMessage() . "\n";
     }
+} catch (FasterPay\Exception $e) {
+    echo "✗ Exception: " . $e->getMessage() . "\n";
 }
-
-echo "  Created " . count($createdSeasonalDiscounts) . " seasonal discount offers\n";
 
 echo "\n";
 
-// Example 8: Create tiered discounts for different customer levels
-echo "8. Creating tiered customer discounts\n";
-echo "-------------------------------------\n";
+// Example 8: Using discounts in invoices (embedded discount object)
+echo "8. Using discounts in invoices\n";
+echo "------------------------------\n";
 
-$tieredDiscounts = [
-    [
-        'name' => 'Bronze Member',
-        'type' => 'percentage',
-        'value' => 5,
-        'description' => '5% discount for Bronze tier customers'
-    ],
-    [
-        'name' => 'Silver Member',
-        'type' => 'percentage',
-        'value' => 10,
-        'description' => '10% discount for Silver tier customers'
-    ],
-    [
-        'name' => 'Gold Member',
-        'type' => 'percentage',
-        'value' => 15,
-        'description' => '15% discount for Gold tier customers'
-    ],
-    [
-        'name' => 'Platinum Member',
+$invoiceWithDiscountData = [
+    'currency' => 'USD',
+    'summary' => 'Invoice with embedded discount',
+    'number' => 'INV-DISC-' . date('Y') . '-' . sprintf('%06d', rand(1, 999999)),
+    'contact_id' => 'CT-250527-AZARCIJE',
+    'discount' => [
+        'name' => 'Seasonal Discount',
         'type' => 'percentage',
         'value' => 20,
-        'description' => '20% discount for Platinum tier customers'
+        'description' => '20% seasonal discount'
+    ],
+    'items' => [
+        [
+            'price' => 200.00,
+            'quantity' => 1,
+            'name' => 'Premium Service Package',
+            'description' => 'Comprehensive service package'
+        ]
     ]
 ];
 
-echo "Creating customer tier discounts:\n";
+try {
+    $invoiceResponse = $businessGateway->eInvoiceService()->createInvoice($invoiceWithDiscountData);
 
-foreach ($tieredDiscounts as $tierData) {
-    try {
-        $response = $businessGateway->eInvoiceDiscountService()->createDiscount($tierData);
-
-        if ($response->isSuccessful()) {
-            $responseData = $response->getDecodeResponse();
-            $tierId = $responseData['data']['id'] ?? 'DC-TIER-' . time();
-            echo "  ✓ {$tierData['name']}: {$tierData['value']}% (ID: $tierId)\n";
-        } else {
-            echo "  ✗ Failed to create {$tierData['name']}\n";
-        }
-    } catch (FasterPay\Exception $e) {
-        echo "  ✗ Exception creating {$tierData['name']}: " . $e->getMessage() . "\n";
+    if ($invoiceResponse->isSuccessful()) {
+        echo "✓ Invoice with embedded discount created successfully\n";
+        $responseData = $invoiceResponse->getDecodeResponse();
+        $invoiceId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'FPBIV-' . time();
+        echo "  Invoice ID: " . $invoiceId . "\n";
+        echo "  Invoice Number: " . $invoiceWithDiscountData['number'] . "\n";
+        echo "  Discount: " . $invoiceWithDiscountData['discount']['name'] . " (" . $invoiceWithDiscountData['discount']['value'] . "%)\n";
+    } else {
+        echo "✗ Error: " . $invoiceResponse->getErrors()->getMessage() . "\n";
     }
+} catch (FasterPay\Exception $e) {
+    echo "✗ Exception: " . $e->getMessage() . "\n";
+}
+
+echo "\n";
+
+// Example 9: Create invoice with both tax and discount
+echo "9. Creating invoice with tax and discount\n";
+echo "-----------------------------------------\n";
+
+$combinedInvoiceData = [
+    'currency' => 'USD',
+    'summary' => 'Invoice with tax and discount',
+    'number' => 'INV-COMBO-' . date('Y') . '-' . sprintf('%06d', rand(1, 999999)),
+    'contact_id' => 'CT-250527-AZARCIJE',
+    'tax' => [
+        'name' => 'Sales Tax',
+        'type' => 'percentage',
+        'value' => 8.5,
+        'description' => '8.5% sales tax'
+    ],
+    'discount' => [
+        'name' => 'First Time Customer',
+        'type' => 'flat',
+        'value' => 25.00,
+        'currency' => 'USD',
+        'description' => '$25 discount for first-time customers'
+    ],
+    'items' => [
+        [
+            'price' => 500.00,
+            'quantity' => 1,
+            'name' => 'Professional Services',
+            'description' => 'Complete professional service package'
+        ]
+    ]
+];
+
+try {
+    $comboResponse = $businessGateway->eInvoiceService()->createInvoice($combinedInvoiceData);
+
+    if ($comboResponse->isSuccessful()) {
+        echo "✓ Invoice with tax and discount created successfully\n";
+        $responseData = $comboResponse->getDecodeResponse();
+        $comboInvoiceId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'FPBIV-' . time();
+        echo "  Invoice ID: " . $comboInvoiceId . "\n";
+        echo "  Invoice Number: " . $combinedInvoiceData['number'] . "\n";
+        echo "  Tax: " . $combinedInvoiceData['tax']['name'] . " (" . $combinedInvoiceData['tax']['value'] . "%)\n";
+        echo "  Discount: " . $combinedInvoiceData['discount']['name'] . " ($" . $combinedInvoiceData['discount']['value'] . ")\n";
+    } else {
+        echo "✗ Error: " . $comboResponse->getErrors()->getMessage() . "\n";
+    }
+} catch (FasterPay\Exception $e) {
+    echo "✗ Exception: " . $e->getMessage() . "\n";
 }
 
 echo "\nE-Invoice Discount API examples completed!\n";
 echo "Use cases:\n";
-echo "• Customer loyalty programs\n";
-echo "• Seasonal and promotional campaigns\n";
-echo "• Volume-based pricing strategies\n";
 echo "• Early payment incentives\n";
-echo "• Tiered customer benefits\n";
-echo "• Dynamic pricing adjustments\n";
-echo "• Bulk order discounts\n";
-echo "• Customer retention strategies\n";
+echo "• Volume purchase discounts\n";
+echo "• Loyalty customer rewards\n";
+echo "• Seasonal promotional offers\n";
+echo "• First-time customer discounts\n";
+echo "• Bulk order price reductions\n";
+echo "• Partner and affiliate discounts\n";
+echo "• Promotional campaign management\n";

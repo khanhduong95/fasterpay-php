@@ -9,17 +9,17 @@ $businessGateway = new FasterPay\BusinessGateway([
 ]);
 
 echo "FasterPay E-Invoice Tax API Examples\n";
-echo "=====================================\n\n";
+echo "====================================\n\n";
 
 // Example 1: Create a flat tax
 echo "1. Creating a flat tax\n";
 echo "----------------------\n";
 
 $flatTaxData = [
-    'name' => 'Sales Tax',
+    'name' => 'Processing Fee',
     'type' => 'flat',
-    'value' => 0.08,
-    'description' => '8% flat sales tax rate'
+    'value' => 2.50,
+    'description' => 'Fixed processing fee per transaction'
 ];
 
 try {
@@ -28,12 +28,12 @@ try {
     if ($taxResponse->isSuccessful()) {
         echo "✓ Flat tax created successfully\n";
         $responseData = $taxResponse->getDecodeResponse();
-        $taxId = $responseData['data']['id'] ?? 'TX-' . time();
-        echo "  Tax ID: $taxId\n";
-        echo "  Name: {$flatTaxData['name']}\n";
-        echo "  Type: {$flatTaxData['type']}\n";
-        echo "  Rate: " . ($flatTaxData['value'] * 100) . "%\n";
-        echo "  Description: {$flatTaxData['description']}\n";
+        $taxId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'TX-' . time();
+        echo "  Tax ID: " . $taxId . "\n";
+        echo "  Name: " . $flatTaxData['name'] . "\n";
+        echo "  Type: " . $flatTaxData['type'] . "\n";
+        echo "  Value: $" . number_format($flatTaxData['value'], 2) . "\n";
+        echo "  Description: " . $flatTaxData['description'] . "\n";
     } else {
         echo "✗ Error: " . $taxResponse->getErrors()->getMessage() . "\n";
     }
@@ -48,24 +48,56 @@ echo "2. Creating a percentage tax\n";
 echo "----------------------------\n";
 
 $percentageTaxData = [
-    'name' => 'VAT',
+    'name' => 'Sales Tax',
     'type' => 'percentage',
-    'value' => 20,
-    'description' => '20% Value Added Tax (UK)'
+    'value' => 8.25,
+    'description' => '8.25% state sales tax'
 ];
 
 try {
-    $vatResponse = $businessGateway->eInvoiceTaxService()->createTax($percentageTaxData);
+    $salesTaxResponse = $businessGateway->eInvoiceTaxService()->createTax($percentageTaxData);
+
+    if ($salesTaxResponse->isSuccessful()) {
+        echo "✓ Percentage tax created successfully\n";
+        $responseData = $salesTaxResponse->getDecodeResponse();
+        $salesTaxId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'TX-SALES-' . time();
+        echo "  Tax ID: " . $salesTaxId . "\n";
+        echo "  Name: " . $percentageTaxData['name'] . "\n";
+        echo "  Type: " . $percentageTaxData['type'] . "\n";
+        echo "  Value: " . $percentageTaxData['value'] . "%\n";
+        echo "  Description: " . $percentageTaxData['description'] . "\n";
+    } else {
+        echo "✗ Error: " . $salesTaxResponse->getErrors()->getMessage() . "\n";
+    }
+} catch (FasterPay\Exception $e) {
+    echo "✗ Exception: " . $e->getMessage() . "\n";
+}
+
+echo "\n";
+
+// Example 3: Create VAT tax
+echo "3. Creating VAT tax\n";
+echo "-------------------\n";
+
+$vatTaxData = [
+    'name' => 'VAT',
+    'type' => 'percentage',
+    'value' => 20,
+    'description' => '20% Value Added Tax'
+];
+
+try {
+    $vatResponse = $businessGateway->eInvoiceTaxService()->createTax($vatTaxData);
 
     if ($vatResponse->isSuccessful()) {
-        echo "✓ Percentage tax created successfully\n";
+        echo "✓ VAT tax created successfully\n";
         $responseData = $vatResponse->getDecodeResponse();
-        $vatId = $responseData['data']['id'] ?? 'TX-VAT-' . time();
-        echo "  Tax ID: $vatId\n";
-        echo "  Name: {$percentageTaxData['name']}\n";
-        echo "  Type: {$percentageTaxData['type']}\n";
-        echo "  Rate: {$percentageTaxData['value']}%\n";
-        echo "  Description: {$percentageTaxData['description']}\n";
+        $vatTaxId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'TX-VAT-' . time();
+        echo "  Tax ID: " . $vatTaxId . "\n";
+        echo "  Name: " . $vatTaxData['name'] . "\n";
+        echo "  Type: " . $vatTaxData['type'] . "\n";
+        echo "  Value: " . $vatTaxData['value'] . "%\n";
+        echo "  Description: " . $vatTaxData['description'] . "\n";
     } else {
         echo "✗ Error: " . $vatResponse->getErrors()->getMessage() . "\n";
     }
@@ -75,56 +107,28 @@ try {
 
 echo "\n";
 
-// Example 3: Create GST tax
-echo "3. Creating GST tax\n";
-echo "-------------------\n";
-
-$gstTaxData = [
-    'name' => 'GST',
-    'type' => 'flat',
-    'value' => 0.10,
-    'description' => '10% Goods and Services Tax'
-];
-
-try {
-    $gstResponse = $businessGateway->eInvoiceTaxService()->createTax($gstTaxData);
-
-    if ($gstResponse->isSuccessful()) {
-        echo "✓ GST tax created successfully\n";
-        $responseData = $gstResponse->getDecodeResponse();
-        $gstId = $responseData['data']['id'] ?? 'TX-GST-' . time();
-        echo "  Tax ID: $gstId\n";
-        echo "  Rate: " . ($gstTaxData['value'] * 100) . "% GST\n";
-    } else {
-        echo "✗ Error: " . $gstResponse->getErrors()->getMessage() . "\n";
-    }
-} catch (FasterPay\Exception $e) {
-    echo "✗ Exception: " . $e->getMessage() . "\n";
-}
-
-echo "\n";
-
 // Example 4: Get tax details
-echo "4. Getting tax details\n";
-echo "----------------------\n";
+echo "4. Retrieving tax details\n";
+echo "-------------------------\n";
 
-$taxId = $taxId ?? 'TX-' . time();
+$testTaxId = isset($taxId) ? $taxId : 'TX-250527-2E9N';
 
 try {
-    $detailsResponse = $businessGateway->eInvoiceTaxService()->getTax($taxId);
+    $getTaxResponse = $businessGateway->eInvoiceTaxService()->getTax($testTaxId);
 
-    if ($detailsResponse->isSuccessful()) {
-        echo "✓ Tax details retrieved\n";
-        $details = $detailsResponse->getDecodeResponse();
-        $tax = $details['data'] ?? [];
-
-        echo "  ID: " . ($tax['id'] ?? $taxId) . "\n";
-        echo "  Name: " . ($tax['name'] ?? 'N/A') . "\n";
-        echo "  Type: " . ($tax['type'] ?? 'N/A') . "\n";
-        echo "  Value: " . ($tax['value'] ?? 'N/A') . "\n";
-        echo "  Description: " . ($tax['description'] ?? 'N/A') . "\n";
+    if ($getTaxResponse->isSuccessful()) {
+        echo "✓ Tax details retrieved successfully\n";
+        $taxData = $getTaxResponse->getDecodeResponse();
+        if (isset($taxData['data'])) {
+            $tax = $taxData['data'];
+            echo "  Tax ID: " . (isset($tax['id']) ? $tax['id'] : $testTaxId) . "\n";
+            echo "  Name: " . (isset($tax['name']) ? $tax['name'] : 'N/A') . "\n";
+            echo "  Type: " . (isset($tax['type']) ? $tax['type'] : 'N/A') . "\n";
+            echo "  Value: " . (isset($tax['value']) ? $tax['value'] : 'N/A') . "\n";
+            echo "  Description: " . (isset($tax['description']) ? $tax['description'] : 'N/A') . "\n";
+        }
     } else {
-        echo "✗ Error: " . $detailsResponse->getErrors()->getMessage() . "\n";
+        echo "✗ Error: " . $getTaxResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
     echo "✗ Exception: " . $e->getMessage() . "\n";
@@ -136,18 +140,21 @@ echo "\n";
 echo "5. Updating tax\n";
 echo "---------------\n";
 
-$updateData = [
-    'value' => 0.085,
-    'description' => 'Updated to 8.5% sales tax rate'
+$updateTaxData = [
+    'name' => 'Updated Processing Fee',
+    'description' => 'Updated processing fee with new rate',
+    'value' => 3.00
 ];
 
 try {
-    $updateResponse = $businessGateway->eInvoiceTaxService()->updateTax($taxId, $updateData);
+    $updateResponse = $businessGateway->eInvoiceTaxService()->updateTax($testTaxId, $updateTaxData);
 
     if ($updateResponse->isSuccessful()) {
         echo "✓ Tax updated successfully\n";
-        echo "  New rate: " . ($updateData['value'] * 100) . "%\n";
-        echo "  Updated description: {$updateData['description']}\n";
+        echo "  Tax ID: " . $testTaxId . "\n";
+        echo "  Updated Name: " . $updateTaxData['name'] . "\n";
+        echo "  Updated Value: $" . number_format($updateTaxData['value'], 2) . "\n";
+        echo "  Updated Description: " . $updateTaxData['description'] . "\n";
     } else {
         echo "✗ Error: " . $updateResponse->getErrors()->getMessage() . "\n";
     }
@@ -157,33 +164,29 @@ try {
 
 echo "\n";
 
-// Example 6: List all taxes
-echo "6. Listing all taxes\n";
-echo "--------------------\n";
+// Example 6: List taxes
+echo "6. Listing taxes\n";
+echo "----------------\n";
+
+$filters = [
+    'limit' => 10,
+    'offset' => 0
+];
 
 try {
-    $listResponse = $businessGateway->eInvoiceTaxService()->listTaxes();
+    $listResponse = $businessGateway->eInvoiceTaxService()->listTaxes($filters);
 
     if ($listResponse->isSuccessful()) {
-        echo "✓ Tax list retrieved\n";
+        echo "✓ Tax list retrieved successfully\n";
         $listData = $listResponse->getDecodeResponse();
-        $taxes = $listData['data']['data'] ?? [];
-
-        echo "  Total taxes: " . count($taxes) . "\n";
-
-        if (!empty($taxes)) {
-            echo "  Configured taxes:\n";
-            foreach ($taxes as $tax) {
-                $id = $tax['id'] ?? 'Unknown';
-                $name = $tax['name'] ?? 'Unnamed';
-                $type = $tax['type'] ?? 'N/A';
-                $value = $tax['value'] ?? 0;
-
-                if ($type === 'percentage') {
-                    echo "    - $name ($id): $value% ($type)\n";
-                } else {
-                    echo "    - $name ($id): " . ($value * 100) . "% ($type)\n";
-                }
+        if (isset($listData['data']) && is_array($listData['data'])) {
+            echo "  Found " . count($listData['data']) . " taxes:\n";
+            foreach ($listData['data'] as $tax) {
+                $id = isset($tax['id']) ? $tax['id'] : 'Unknown';
+                $name = isset($tax['name']) ? $tax['name'] : 'Unnamed';
+                $type = isset($tax['type']) ? $tax['type'] : 'Unknown';
+                $value = isset($tax['value']) ? $tax['value'] : '0';
+                echo "    - " . $name . " (" . $id . ") - " . $type . ": " . $value . "\n";
             }
         }
     } else {
@@ -195,28 +198,20 @@ try {
 
 echo "\n";
 
-// Example 7: Create zero tax (tax-exempt)
-echo "7. Creating tax-exempt option\n";
-echo "-----------------------------\n";
+// Example 7: Delete tax
+echo "7. Deleting tax\n";
+echo "---------------\n";
 
-$zeroTaxData = [
-    'name' => 'Tax Exempt',
-    'type' => 'flat',
-    'value' => 0,
-    'description' => 'No tax applied - tax exempt status'
-];
+$deleteTestTaxId = isset($vatTaxId) ? $vatTaxId : 'TX-DELETE-' . time();
 
 try {
-    $zeroTaxResponse = $businessGateway->eInvoiceTaxService()->createTax($zeroTaxData);
+    $deleteResponse = $businessGateway->eInvoiceTaxService()->deleteTax($deleteTestTaxId);
 
-    if ($zeroTaxResponse->isSuccessful()) {
-        echo "✓ Tax-exempt option created successfully\n";
-        $responseData = $zeroTaxResponse->getDecodeResponse();
-        $zeroTaxId = $responseData['data']['id'] ?? 'TX-EXEMPT-' . time();
-        echo "  Tax ID: $zeroTaxId\n";
-        echo "  Rate: 0% (tax exempt)\n";
+    if ($deleteResponse->isSuccessful()) {
+        echo "✓ Tax deleted successfully\n";
+        echo "  Deleted Tax ID: " . $deleteTestTaxId . "\n";
     } else {
-        echo "✗ Error: " . $zeroTaxResponse->getErrors()->getMessage() . "\n";
+        echo "✗ Error: " . $deleteResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
     echo "✗ Exception: " . $e->getMessage() . "\n";
@@ -224,58 +219,144 @@ try {
 
 echo "\n";
 
-// Example 8: Create multiple regional taxes
-echo "8. Creating regional tax variations\n";
-echo "-----------------------------------\n";
+// Example 8: Using taxes in invoices (embedded tax object)
+echo "8. Using taxes in invoices\n";
+echo "--------------------------\n";
 
-$regionalTaxes = [
-    [
-        'name' => 'California Sales Tax',
-        'type' => 'flat',
-        'value' => 0.0725,
-        'description' => '7.25% California state sales tax'
+$invoiceWithTaxData = [
+    'currency' => 'USD',
+    'summary' => 'Invoice with embedded tax',
+    'number' => 'INV-TAX-' . date('Y') . '-' . sprintf('%06d', rand(1, 999999)),
+    'contact_id' => 'CT-250527-AZARCIJE',
+    'tax' => [
+        'name' => 'Service Tax',
+        'type' => 'percentage',
+        'value' => 5,
+        'description' => '5% service tax'
     ],
-    [
-        'name' => 'New York Sales Tax',
-        'type' => 'flat',
-        'value' => 0.08,
-        'description' => '8% New York state sales tax'
-    ],
-    [
-        'name' => 'Texas Sales Tax',
-        'type' => 'flat',
-        'value' => 0.0625,
-        'description' => '6.25% Texas state sales tax'
+    'items' => [
+        [
+            'price' => 100.00,
+            'quantity' => 1,
+            'name' => 'Consulting Service',
+            'description' => 'Professional consulting service'
+        ]
     ]
 ];
 
-$createdRegionalTaxes = [];
+try {
+    $invoiceResponse = $businessGateway->eInvoiceService()->createInvoice($invoiceWithTaxData);
 
-foreach ($regionalTaxes as $taxData) {
-    try {
-        $response = $businessGateway->eInvoiceTaxService()->createTax($taxData);
-
-        if ($response->isSuccessful()) {
-            $responseData = $response->getDecodeResponse();
-            $taxId = $responseData['data']['id'] ?? 'TX-REGIONAL-' . time();
-            $createdRegionalTaxes[] = $taxId;
-
-            echo "✓ {$taxData['name']}: " . ($taxData['value'] * 100) . "% (ID: $taxId)\n";
-        } else {
-            echo "✗ Failed to create {$taxData['name']}: " . $response->getErrors()->getMessage() . "\n";
-        }
-    } catch (FasterPay\Exception $e) {
-        echo "✗ Exception creating {$taxData['name']}: " . $e->getMessage() . "\n";
+    if ($invoiceResponse->isSuccessful()) {
+        echo "✓ Invoice with embedded tax created successfully\n";
+        $responseData = $invoiceResponse->getDecodeResponse();
+        $invoiceId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'FPBIV-' . time();
+        echo "  Invoice ID: " . $invoiceId . "\n";
+        echo "  Invoice Number: " . $invoiceWithTaxData['number'] . "\n";
+        echo "  Tax: " . $invoiceWithTaxData['tax']['name'] . " (" . $invoiceWithTaxData['tax']['value'] . "%)\n";
+    } else {
+        echo "✗ Error: " . $invoiceResponse->getErrors()->getMessage() . "\n";
     }
+} catch (FasterPay\Exception $e) {
+    echo "✗ Exception: " . $e->getMessage() . "\n";
+} => 0
+);
+
+try {
+    $listResponse = $businessGateway->eInvoiceTaxService()->listTaxes($filters);
+
+    if ($listResponse->isSuccessful()) {
+        echo "✓ Tax list retrieved successfully\n";
+        $listData = $listResponse->getDecodeResponse();
+        if (isset($listData['data']) && is_array($listData['data'])) {
+            echo "  Found " . count($listData['data']) . " taxes:\n";
+            foreach ($listData['data'] as $tax) {
+                $id = isset($tax['id']) ? $tax['id'] : 'Unknown';
+                $name = isset($tax['name']) ? $tax['name'] : 'Unnamed';
+                $type = isset($tax['type']) ? $tax['type'] : 'Unknown';
+                $value = isset($tax['value']) ? $tax['value'] : '0';
+                echo "    - " . $name . " (" . $id . ") - " . $type . ": " . $value . "\n";
+            }
+        }
+    } else {
+        echo "✗ Error: " . $listResponse->getErrors()->getMessage() . "\n";
+    }
+} catch (FasterPay\Exception $e) {
+    echo "✗ Exception: " . $e->getMessage() . "\n";
 }
 
-echo "  Created " . count($createdRegionalTaxes) . " regional tax configurations\n";
+echo "\n";
+
+// Example 7: Delete tax
+echo "7. Deleting tax\n";
+echo "---------------\n";
+
+$deleteTestTaxId = isset($vatTaxId) ? $vatTaxId : 'TX-DELETE-' . time();
+
+try {
+    $deleteResponse = $businessGateway->eInvoiceTaxService()->deleteTax($deleteTestTaxId);
+
+    if ($deleteResponse->isSuccessful()) {
+        echo "✓ Tax deleted successfully\n";
+        echo "  Deleted Tax ID: " . $deleteTestTaxId . "\n";
+    } else {
+        echo "✗ Error: " . $deleteResponse->getErrors()->getMessage() . "\n";
+    }
+} catch (FasterPay\Exception $e) {
+    echo "✗ Exception: " . $e->getMessage() . "\n";
+}
+
+echo "\n";
+
+// Example 8: Using taxes in invoices (embedded tax object)
+echo "8. Using taxes in invoices\n";
+echo "--------------------------\n";
+
+$invoiceWithTaxData = array(
+    'currency' => 'USD',
+    'summary' => 'Invoice with embedded tax',
+    'number' => 'INV-TAX-' . date('Y') . '-' . sprintf('%06d', rand(1, 999999)),
+    'contact_id' => 'CT-250527-AZARCIJE',
+    'tax' => array(
+        'name' => 'Service Tax',
+        'type' => 'percentage',
+        'value' => 5,
+        'description' => '5% service tax'
+    ),
+    'items' => array(
+        array(
+            'price' => 100.00,
+            'quantity' => 1,
+            'name' => 'Consulting Service',
+            'description' => 'Professional consulting service'
+        )
+    )
+);
+
+try {
+    $invoiceResponse = $businessGateway->eInvoiceService()->createInvoice($invoiceWithTaxData);
+
+    if ($invoiceResponse->isSuccessful()) {
+        echo "✓ Invoice with embedded tax created successfully\n";
+        $responseData = $invoiceResponse->getDecodeResponse();
+        $invoiceId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'FPBIV-' . time();
+        echo "  Invoice ID: " . $invoiceId . "\n";
+        echo "  Invoice Number: " . $invoiceWithTaxData['number'] . "\n";
+        echo "  Tax: " . $invoiceWithTaxData['tax']['name'] . " (" . $invoiceWithTaxData['tax']['value'] . "%)\n";
+    } else {
+        echo "✗ Error: " . $invoiceResponse->getErrors()->getMessage() . "\n";
+    }
+} catch (FasterPay\Exception $e) {
+    echo "✗ Exception: " . $e->getMessage() . "\n";
+}
 
 echo "\nE-Invoice Tax API examples completed!\n";
 echo "Use cases:\n";
-echo "• Multi-jurisdictional tax compliance\n";
-echo "• Automated tax calculation\n";
-echo "• Regional tax rate management\n";
-echo "• Tax-exempt transaction handling\n";
-echo "• VAT/GST compliance for international sales\n";
-echo "• Dynamic tax rate updates\n";
+echo "• Sales tax calculation and management\n";
+echo "• VAT handling for international transactions\n";
+echo "• Fixed processing fees\n";
+echo "• State and local tax compliance\n";
+echo "• Custom tax rates per region\n";
+echo "• Tax exemption handling\n";
+echo "• Multi-jurisdiction tax support\n";
+echo "• Automated tax calculation in invoices\n";

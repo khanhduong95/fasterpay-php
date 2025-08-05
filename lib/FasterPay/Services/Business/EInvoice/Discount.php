@@ -15,46 +15,9 @@ class Discount extends GeneralService
      *
      * @param array $params Discount parameters
      * @return GeneralResponse
-     * @throws Exception
      */
-    public function createDiscount(array $params = [])
+    public function createDiscount(array $params = array())
     {
-        if (empty($params['name'])) {
-            throw new Exception('Discount name is required');
-        }
-
-        if (empty($params['type'])) {
-            throw new Exception('Discount type is required');
-        }
-
-        if (!isset($params['value']) || !is_numeric($params['value'])) {
-            throw new Exception('Discount value is required and must be numeric');
-        }
-
-        // Validate discount type
-        $validTypes = ['flat', 'percentage'];
-        if (!in_array($params['type'], $validTypes)) {
-            throw new Exception('Discount type must be either "flat" or "percentage"');
-        }
-
-        // Validate value based on type
-        if ($params['type'] === 'percentage' && ($params['value'] < 0 || $params['value'] > 100)) {
-            throw new Exception('Percentage discount value must be between 0 and 100');
-        }
-
-        if ($params['type'] === 'flat' && $params['value'] < 0) {
-            throw new Exception('Flat discount value must be non-negative');
-        }
-
-        // Validate currency for flat discounts
-        if ($params['type'] === 'flat' && empty($params['currency'])) {
-            throw new Exception('Currency is required for flat discount type');
-        }
-
-        if (!empty($params['currency']) && strlen($params['currency']) !== 3) {
-            throw new Exception('Currency must be 3 characters (ISO 4217)');
-        }
-
         $endpoint = $this->httpService->getEndPoint($this->endpoint);
 
         $response = $this->httpService->getHttpClient()->post($endpoint, $params);
@@ -90,7 +53,18 @@ class Discount extends GeneralService
      * @return GeneralResponse
      * @throws Exception
      */
-    public function updateDiscount($discountId = '', array $params = [])
+    public function updateDiscount($discountId = '', array $params = array())
+    {
+        if (empty($discountId)) {
+            throw new Exception('Discount ID is required');
+        }
+
+        $endpoint = $this->httpService->getEndPoint($this->endpoint . '/' . $discountId);
+
+        $response = $this->httpService->getHttpClient()->put($endpoint, $params);
+
+        return new GeneralResponse($response);
+    } array $params = array())
     {
         if (empty($discountId)) {
             throw new Exception('Discount ID is required');
@@ -98,7 +72,7 @@ class Discount extends GeneralService
 
         // Validate discount type if provided
         if (!empty($params['type'])) {
-            $validTypes = ['flat', 'percentage'];
+            $validTypes = array('flat', 'percentage');
             if (!in_array($params['type'], $validTypes)) {
                 throw new Exception('Discount type must be either "flat" or "percentage"');
             }
@@ -121,9 +95,11 @@ class Discount extends GeneralService
             }
         }
 
-        // Validate currency if provided
-        if (!empty($params['currency']) && strlen($params['currency']) !== 3) {
-            throw new Exception('Currency must be 3 characters (ISO 4217)');
+        // Validate currency for flat discounts
+        if (!empty($params['type']) && $params['type'] === 'flat' && !empty($params['currency'])) {
+            if (strlen($params['currency']) !== 3) {
+                throw new Exception('Currency must be 3 characters (ISO 4217)');
+            }
         }
 
         $endpoint = $this->httpService->getEndPoint($this->endpoint . '/' . $discountId);
@@ -159,7 +135,7 @@ class Discount extends GeneralService
      * @param array $filters Optional filters
      * @return GeneralResponse
      */
-    public function listDiscounts(array $filters = [])
+    public function listDiscounts(array $filters = array())
     {
         $endpoint = $this->httpService->getEndPoint($this->endpoint);
 
