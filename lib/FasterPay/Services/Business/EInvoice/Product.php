@@ -11,49 +11,17 @@ class Product extends GeneralService
     protected $endpoint = 'api/external/invoices/products';
 
     /**
-     * Create a new invoice product
+     * Create a new product
+     * Supports multipart/form-data for image uploads
      *
      * @param array $params Product parameters
      * @return GeneralResponse
-     * @throws Exception
      */
     public function createProduct(array $params = [])
     {
-        if (empty($params['name'])) {
-            throw new Exception('Product name is required');
-        }
-
-        if (empty($params['sku'])) {
-            throw new Exception('Product SKU is required');
-        }
-
-        if (empty($params['type'])) {
-            throw new Exception('Product type is required');
-        }
-
-        // Validate product type
-        $validTypes = ['digital', 'physical', 'service'];
-        if (!in_array($params['type'], $validTypes)) {
-            throw new Exception('Product type must be one of: ' . implode(', ', $validTypes));
-        }
-
-        // Validate prices if provided
-        if (!empty($params['prices']) && is_array($params['prices'])) {
-            foreach ($params['prices'] as $price) {
-                if (!isset($price['price']) || !is_numeric($price['price'])) {
-                    throw new Exception('Each price must have a numeric price value');
-                }
-                if (empty($price['currency']) || strlen($price['currency']) !== 3) {
-                    throw new Exception('Each price must have a valid 3-character currency code');
-                }
-                if ($price['price'] < 0) {
-                    throw new Exception('Price must be non-negative');
-                }
-            }
-        }
-
         $endpoint = $this->httpService->getEndPoint($this->endpoint);
 
+        // Use POST method - HttpClient will auto-detect files and use multipart if needed
         $response = $this->httpService->getHttpClient()->post($endpoint, $params);
 
         return new GeneralResponse($response);
@@ -81,6 +49,7 @@ class Product extends GeneralService
 
     /**
      * Update product
+     * Supports multipart/form-data for image uploads
      *
      * @param string $productId Product ID
      * @param array $params Updated product parameters
@@ -93,31 +62,9 @@ class Product extends GeneralService
             throw new Exception('Product ID is required');
         }
 
-        // Validate product type if provided
-        if (!empty($params['type'])) {
-            $validTypes = ['digital', 'physical', 'service'];
-            if (!in_array($params['type'], $validTypes)) {
-                throw new Exception('Product type must be one of: ' . implode(', ', $validTypes));
-            }
-        }
-
-        // Validate prices if provided
-        if (!empty($params['prices']) && is_array($params['prices'])) {
-            foreach ($params['prices'] as $price) {
-                if (!isset($price['price']) || !is_numeric($price['price'])) {
-                    throw new Exception('Each price must have a numeric price value');
-                }
-                if (empty($price['currency']) || strlen($price['currency']) !== 3) {
-                    throw new Exception('Each price must have a valid 3-character currency code');
-                }
-                if ($price['price'] < 0) {
-                    throw new Exception('Price must be non-negative');
-                }
-            }
-        }
-
         $endpoint = $this->httpService->getEndPoint($this->endpoint . '/' . $productId);
 
+        // Use PUT method - HttpClient will auto-detect files and use POST + _method=PUT if needed
         $response = $this->httpService->getHttpClient()->put($endpoint, $params);
 
         return new GeneralResponse($response);
@@ -144,9 +91,9 @@ class Product extends GeneralService
     }
 
     /**
-     * List products
+     * List products with optional filters
      *
-     * @param array $filters Optional filters
+     * @param array $filters Optional filters (limit, offset, sku, type, etc.)
      * @return GeneralResponse
      */
     public function listProducts(array $filters = [])
@@ -159,22 +106,26 @@ class Product extends GeneralService
     }
 
     /**
-     * Search products by SKU
+     * Delete product price by currency
      *
-     * @param string $sku Product SKU
+     * @param string $productId Product ID
+     * @param string $currency Currency code (ISO-4217 format)
      * @return GeneralResponse
      * @throws Exception
      */
-    public function getProductBySku($sku = '')
+    public function deleteProductPrice($productId = '', $currency = '')
     {
-        if (empty($sku)) {
-            throw new Exception('Product SKU is required');
+        if (empty($productId)) {
+            throw new Exception('Product ID is required');
         }
 
-        $endpoint = $this->httpService->getEndPoint($this->endpoint);
-        $params = ['sku' => $sku];
+        if (empty($currency)) {
+            throw new Exception('Currency is required');
+        }
 
-        $response = $this->httpService->getHttpClient()->get($endpoint, $params);
+        $endpoint = $this->httpService->getEndPoint($this->endpoint . '/' . $productId . '/prices/' . $currency);
+
+        $response = $this->httpService->getHttpClient()->delete($endpoint);
 
         return new GeneralResponse($response);
     }
