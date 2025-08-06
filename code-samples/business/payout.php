@@ -5,10 +5,15 @@ require_once('../../lib/autoload.php');
 $businessGateway = new FasterPay\BusinessGateway([
     'publicKey' => '<your-public-key>',
     'privateKey' => '<your-private-key>',
-    'isTest' => 1,
+    'isTest' => 1
 ]);
 
-// Example 1: Create mass payout
+echo "=== FasterPay Mass Payout API Examples ===\n\n";
+
+// Example 1: Create mass payout following API documentation
+echo "1. Creating mass payout\n";
+echo "-----------------------\n";
+
 $massPayoutParams = [
     'source_currency' => 'USD',
     'template' => 'wallet',
@@ -27,35 +32,28 @@ $massPayoutParams = [
             'amount' => '75.50',
             'amount_currency' => 'USD',
             'target_currency' => 'USD',
-            'receiver_full_name' => 'Jane Smith',
+            'receiver_full_name' => 'Jane Smith Corporation',
             'receiver_email' => 'jane@example.com',
-            'receiver_type' => 'private'
-        ],
-        [
-            'reference_id' => 'payout_003',
-            'amount' => '200.25',
-            'amount_currency' => 'USD',
-            'target_currency' => 'USD',
-            'receiver_full_name' => 'Bob Johnson',
-            'receiver_email' => 'bob@example.com',
             'receiver_type' => 'business'
         ]
     ]
 ];
 
+$createdPayoutIds = [];
+
 try {
-    $massPayoutResponse = $businessGateway->massPayoutService()->createPayout($massPayoutParams);
+    $massPayoutResponse = $businessGateway->payoutService()->createPayout($massPayoutParams);
 
     if ($massPayoutResponse->isSuccessful()) {
         echo "Mass payout created successfully\n";
-        echo "Response: " . $massPayoutResponse->getRawResponse() . "\n";
-
-        // Extract payout ID from response for further operations
         $responseData = $massPayoutResponse->getDecodeResponse();
-        $payoutId = $responseData['payout_id'] ?? null;
-
-        if ($payoutId) {
-            echo "Payout ID: " . $payoutId . "\n";
+        
+        // Extract payout IDs from response for further operations
+        if (isset($responseData['data']['payouts']) && is_array($responseData['data']['payouts'])) {
+            foreach ($responseData['data']['payouts'] as $payoutItem) {
+                $createdPayoutIds[] = $payoutItem['id'];
+                echo "Payout ID: " . $payoutItem['id'] . " - Status: " . $payoutItem['status'] . "\n";
+            }
         }
     } else {
         echo "Error: " . $massPayoutResponse->getErrors()->getMessage() . "\n";
@@ -64,81 +62,70 @@ try {
     echo "Exception: " . $e->getMessage() . "\n";
 }
 
-// Example 2: Get payout details
-$payoutId = '<your-payout-id>';
+echo "\n";
 
-try {
-    $payoutDetails = $businessGateway->massPayoutService()->getPayoutDetails($payoutId);
+// Example 2: Get payout details using ID from create response
+echo "2. Getting payout details\n";
+echo "-------------------------\n";
 
-    if ($payoutDetails->isSuccessful()) {
-        echo "Payout details retrieved successfully\n";
-        echo "Details: " . $payoutDetails->getRawResponse() . "\n";
-    } else {
-        echo "Error: " . $payoutDetails->getErrors()->getMessage() . "\n";
+if (!empty($createdPayoutIds)) {
+    $payoutId = $createdPayoutIds[0]; // Use first created payout ID
+    echo "Using payout ID from create response: " . $payoutId . "\n";
+    
+    try {
+        $payoutDetails = $businessGateway->payoutService()->getPayoutDetails($payoutId);
+
+        if ($payoutDetails->isSuccessful()) {
+            echo "Payout details retrieved successfully\n";
+            $responseData = $payoutDetails->getDecodeResponse();
+            
+            if (isset($responseData['data'])) {
+                $data = $responseData['data'];
+                echo "Payout ID: " . $data['id'] . "\n";
+                echo "Status: " . $data['status'] . "\n";
+                echo "Receiver: " . $data['receiver_full_name'] . " (" . $data['receiver_email'] . ")\n";
+                echo "Amount: " . $data['amounts']['target_amount'] . " " . $data['amounts']['target_currency'] . "\n";
+            }
+        } else {
+            echo "Error: " . $payoutDetails->getErrors()->getMessage() . "\n";
+        }
+    } catch (FasterPay\Exception $e) {
+        echo "Exception: " . $e->getMessage() . "\n";
     }
-} catch (FasterPay\Exception $e) {
-    echo "Exception: " . $e->getMessage() . "\n";
+} else {
+    echo "No payout ID available from previous create operation\n";
 }
 
+echo "\n";
+
 // Example 3: Get payout list with filters
+echo "3. Getting payout list with filters\n";
+echo "-----------------------------------\n";
+
 $filters = [
     'limit' => 20,
     'offset' => 0,
-    'status' => 'pending',
+    'status' => 'submitted',
     'from_date' => '2024-01-01',
     'to_date' => '2024-12-31'
 ];
 
 try {
-    $payoutList = $businessGateway->massPayoutService()->getPayoutList($filters);
+    $payoutList = $businessGateway->payoutService()->getPayoutList($filters);
 
     if ($payoutList->isSuccessful()) {
         echo "Payout list retrieved successfully\n";
-        echo "List: " . $payoutList->getRawResponse() . "\n";
+        $responseData = $payoutList->getDecodeResponse();
+        
+        if (isset($responseData['data']['payouts']) && is_array($responseData['data']['payouts'])) {
+            echo "Found " . count($responseData['data']['payouts']) . " payouts\n";
+            foreach ($responseData['data']['payouts'] as $payout) {
+                echo "- " . $payout['id'] . " (" . $payout['status'] . ") - " . 
+                     $payout['amounts']['target_amount'] . " " . $payout['amounts']['target_currency'] . "\n";
+            }
+        }
     } else {
         echo "Error: " . $payoutList->getErrors()->getMessage() . "\n";
-    }
-} catch (FasterPay\Exception $e) {
-    echo "Exception: " . $e->getMessage() . "\n";
-}
-
-// Example 4: Get payout status
-try {
-    $payoutStatus = $businessGateway->massPayoutService()->getPayoutStatus($payoutId);
-
-    if ($payoutStatus->isSuccessful()) {
-        echo "Payout status retrieved successfully\n";
-        echo "Status: " . $payoutStatus->getRawResponse() . "\n";
-    } else {
-        echo "Error: " . $payoutStatus->getErrors()->getMessage() . "\n";
-    }
-} catch (FasterPay\Exception $e) {
-    echo "Exception: " . $e->getMessage() . "\n";
-}
-
-// Example 5: Cancel payout (if still pending)
-try {
-    $cancelResponse = $businessGateway->massPayoutService()->cancelPayout($payoutId);
-
-    if ($cancelResponse->isSuccessful()) {
-        echo "Payout cancelled successfully\n";
-        echo "Response: " . $cancelResponse->getRawResponse() . "\n";
-    } else {
-        echo "Error: " . $cancelResponse->getErrors()->getMessage() . "\n";
-    }
-} catch (FasterPay\Exception $e) {
-    echo "Exception: " . $e->getMessage() . "\n";
-}
-
-// Example 6: Retry failed payout
-try {
-    $retryResponse = $businessGateway->massPayoutService()->retryPayout($payoutId);
-
-    if ($retryResponse->isSuccessful()) {
-        echo "Payout retry initiated successfully\n";
-        echo "Response: " . $retryResponse->getRawResponse() . "\n";
-    } else {
-        echo "Error: " . $retryResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
     echo "Exception: " . $e->getMessage() . "\n";
