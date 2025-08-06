@@ -5,7 +5,6 @@ require_once('../../lib/autoload.php');
 $businessGateway = new FasterPay\BusinessGateway([
     'publicKey' => '<your-public-key>',
     'privateKey' => '<your-private-key>',
-    'isTest' => 1,
 ]);
 
 echo "FasterPay Address API Examples\n";

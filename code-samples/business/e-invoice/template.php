@@ -5,11 +5,10 @@ require_once('../../../lib/autoload.php');
 $businessGateway = new FasterPay\BusinessGateway([
     'publicKey' => '<your-public-key>',
     'privateKey' => '<your-private-key>',
-    'isTest' => 1,
 ]);
 
-echo "FasterPay E-Invoice Template API Examples\n";
-echo "==========================================\n\n";
+echo "FasterPay Invoice Template API Examples\n";
+echo "========================================\n\n";
 
 // Example 1: Create a new invoice template
 echo "1. Creating a new invoice template\n";
@@ -32,56 +31,19 @@ $templateData = [
 ];
 
 try {
-    $templateResponse = $businessGateway->eInvoiceTemplateService()->createTemplate($templateData);
+    $templateResponse = $businessGateway->invoiceTemplateService()->createTemplate($templateData);
 
     if ($templateResponse->isSuccessful()) {
         echo "Template created successfully\n";
         $responseData = $templateResponse->getDecodeResponse();
-        $templateId = $responseData['data']['id'] ?? 'IT-' . time();
+        $templateId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'IT-' . time();
         echo "  Template ID: $templateId\n";
         echo "  Name: {$templateData['name']}\n";
         echo "  Primary Color: {$templateData['colors']['primary']}\n";
         echo "  Address: {$templateData['localized_address']['address_line1']}, {$templateData['localized_address']['locality']}\n";
-        echo "  Full Address: " . ($responseData['data']['full_address'] ?? 'Generated automatically') . "\n";
+        echo "  Full Address: " . (isset($responseData['data']['full_address']) ? $responseData['data']['full_address'] : 'Generated automatically') . "\n";
     } else {
         echo "Error: " . $templateResponse->getErrors()->getMessage() . "\n";
-    }
-} catch (FasterPay\Exception $e) {
-    echo "Exception: " . $e->getMessage() . "\n";
-}
-
-echo "\n";
-
-// Example 4.5: Update template with logo
-echo "4.5 Updating template with logo\n";
-echo "--------------------------------\n";
-
-$updateWithLogoData = [
-    'footer' => 'Updated template with new branding and logo!',
-    'colors' => [
-        'primary' => '#7c2d12',
-        'secondary' => '#fef7ed'
-    ],
-    'logo' => '/path/to/updated-logo.jpg' // File path provided directly in params
-];
-
-try {
-    // Note: In real implementation, provide actual logo file path in params['logo']
-    // The service automatically detects file fields and uses multipart upload with _method=PUT
-    
-    // For demo purposes, update without logo
-    $demoUpdateData = $updateWithLogoData;
-    unset($demoUpdateData['logo']); // Remove for demo
-    $updateLogoResponse = $businessGateway->eInvoiceTemplateService()->updateTemplate($templateId, $demoUpdateData);
-
-    if ($updateLogoResponse->isSuccessful()) {
-        echo "Template with logo updated successfully\n";
-        echo "  Updated footer and branding colors\n";
-        echo "  Logo: File would be uploaded automatically if 'logo' field contains file path\n";
-        echo "  Usage: \$params['logo'] = '/path/to/new-file.jpg'\n";
-        echo "  Method: Automatically uses POST + _method=PUT for file uploads\n";
-    } else {
-        echo "Error: " . $updateLogoResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
     echo "Exception: " . $e->getMessage() . "\n";
@@ -113,16 +75,16 @@ $templateWithLogoData = [
 try {
     // Note: In real implementation, provide actual logo file path in params['logo']
     // The service automatically detects file fields and uses multipart upload
-    
+
     // For demo purposes, create without logo
     $demoData = $templateWithLogoData;
     unset($demoData['logo']); // Remove for demo
-    $logoResponse = $businessGateway->eInvoiceTemplateService()->createTemplate($demoData);
+    $logoResponse = $businessGateway->invoiceTemplateService()->createTemplate($demoData);
 
     if ($logoResponse->isSuccessful()) {
         echo "Template with logo created successfully\n";
         $responseData = $logoResponse->getDecodeResponse();
-        $logoTemplateId = $responseData['data']['id'] ?? 'IT-LOGO-' . time();
+        $logoTemplateId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'IT-LOGO-' . time();
         echo "  Template ID: $logoTemplateId\n";
         echo "  Name: {$templateWithLogoData['name']}\n";
         echo "  Logo: File would be uploaded automatically if 'logo' field contains file path\n";
@@ -158,12 +120,12 @@ $brandedTemplateData = [
 ];
 
 try {
-    $brandedResponse = $businessGateway->eInvoiceTemplateService()->createTemplate($brandedTemplateData);
+    $brandedResponse = $businessGateway->invoiceTemplateService()->createTemplate($brandedTemplateData);
 
     if ($brandedResponse->isSuccessful()) {
         echo "Branded template created successfully\n";
         $responseData = $brandedResponse->getDecodeResponse();
-        $brandedTemplateId = $responseData['data']['id'] ?? 'IT-BRAND-' . time();
+        $brandedTemplateId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'IT-BRAND-' . time();
         echo "  Template ID: $brandedTemplateId\n";
         echo "  Brand Colors: {$brandedTemplateData['colors']['primary']} / {$brandedTemplateData['colors']['secondary']}\n";
         echo "  Corporate Address: {$brandedTemplateData['localized_address']['address_line1']}\n";
@@ -180,26 +142,26 @@ echo "\n";
 echo "3. Getting template details\n";
 echo "---------------------------\n";
 
-$templateId = $templateId ?? 'IT-' . time();
+$templateId = isset($templateId) ? $templateId : 'IT-' . time();
 
 try {
-    $detailsResponse = $businessGateway->eInvoiceTemplateService()->getTemplate($templateId);
+    $detailsResponse = $businessGateway->invoiceTemplateService()->getTemplate($templateId);
 
     if ($detailsResponse->isSuccessful()) {
         echo "Template details retrieved\n";
-        $details = $detailsResponse->getDecodeResponse();
-        $template = $details['data'] ?? [];
+        $details = isset($detailsResponse->getDecodeResponse()['data']) ? $detailsResponse->getDecodeResponse()['data'] : [];
+        $template = $details;
 
-        echo "  ID: " . ($template['id'] ?? $templateId) . "\n";
-        echo "  Name: " . ($template['name'] ?? 'N/A') . "\n";
-        echo "  Country: " . ($template['country_code'] ?? 'N/A') . "\n";
-        echo "  Footer: " . ($template['footer'] ?? 'N/A') . "\n";
-        
+        echo "  ID: " . (isset($template['id']) ? $template['id'] : $templateId) . "\n";
+        echo "  Name: " . (isset($template['name']) ? $template['name'] : 'N/A') . "\n";
+        echo "  Country: " . (isset($template['country_code']) ? $template['country_code'] : 'N/A') . "\n";
+        echo "  Footer: " . (isset($template['footer']) ? $template['footer'] : 'N/A') . "\n";
+
         if (isset($template['colors'])) {
-            echo "  Primary Color: " . ($template['colors']['primary'] ?? 'N/A') . "\n";
-            echo "  Secondary Color: " . ($template['colors']['secondary'] ?? 'N/A') . "\n";
+            echo "  Primary Color: " . (isset($template['colors']['primary']) ? $template['colors']['primary'] : 'N/A') . "\n";
+            echo "  Secondary Color: " . (isset($template['colors']['secondary']) ? $template['colors']['secondary'] : 'N/A') . "\n";
         }
-        
+
         if (isset($template['full_address'])) {
             echo "  Full Address: " . $template['full_address'] . "\n";
         }
@@ -225,7 +187,7 @@ $updateData = [
 ];
 
 try {
-    $updateResponse = $businessGateway->eInvoiceTemplateService()->updateTemplate($templateId, $updateData);
+    $updateResponse = $businessGateway->invoiceTemplateService()->updateTemplate($templateId, $updateData);
 
     if ($updateResponse->isSuccessful()) {
         echo "Template updated successfully\n";
@@ -233,6 +195,43 @@ try {
         echo "  Updated footer\n";
     } else {
         echo "Error: " . $updateResponse->getErrors()->getMessage() . "\n";
+    }
+} catch (FasterPay\Exception $e) {
+    echo "Exception: " . $e->getMessage() . "\n";
+}
+
+echo "\n";
+
+// Example 4.5: Update template with logo
+echo "4.5 Updating template with logo\n";
+echo "--------------------------------\n";
+
+$updateWithLogoData = [
+    'footer' => 'Updated template with new branding and logo!',
+    'colors' => [
+        'primary' => '#7c2d12',
+        'secondary' => '#fef7ed'
+    ],
+    'logo' => '/path/to/updated-logo.jpg' // File path provided directly in params
+];
+
+try {
+    // Note: In real implementation, provide actual logo file path in params['logo']
+    // The service automatically detects file fields and uses multipart upload with _method=PUT
+
+    // For demo purposes, update without logo
+    $demoUpdateData = $updateWithLogoData;
+    unset($demoUpdateData['logo']); // Remove for demo
+    $updateLogoResponse = $businessGateway->invoiceTemplateService()->updateTemplate($templateId, $demoUpdateData);
+
+    if ($updateLogoResponse->isSuccessful()) {
+        echo "Template with logo updated successfully\n";
+        echo "  Updated footer and branding colors\n";
+        echo "  Logo: File would be uploaded automatically if 'logo' field contains file path\n";
+        echo "  Usage: \$params['logo'] = '/path/to/new-file.jpg'\n";
+        echo "  Method: Automatically uses POST + _method=PUT for file uploads\n";
+    } else {
+        echo "Error: " . $updateLogoResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
     echo "Exception: " . $e->getMessage() . "\n";
@@ -250,25 +249,18 @@ $listFilters = [
 ];
 
 try {
-    $listResponse = $businessGateway->eInvoiceTemplateService()->listTemplates($listFilters);
+    $listResponse = $businessGateway->invoiceTemplateService()->listTemplates($listFilters);
 
     if ($listResponse->isSuccessful()) {
         echo "Templates list retrieved\n";
         $listData = $listResponse->getDecodeResponse();
-        $templates = $listData['data']['data'] ?? [];
+        $templates = isset($listData['data']['data']) ? $listData['data']['data'] : [];
 
-        echo "  Total templates: " . count($templates) . "\n";
-        echo "  Current page: " . ($listData['data']['current_page'] ?? 1) . "\n";
-        echo "  Per page: " . ($listData['data']['per_page'] ?? 10) . "\n";
-
-        if (!empty($templates)) {
-            echo "  Templates:\n";
-            foreach ($templates as $template) {
-                $id = $template['id'] ?? 'Unknown';
-                $name = $template['name'] ?? 'Unnamed';
-                $country = $template['country_code'] ?? 'N/A';
-                echo "    - $name ($id) - Country: $country\n";
-            }
+        echo "  Found " . count($templates) . " templates\n";
+        foreach ($templates as $template) {
+            $id = isset($template['id']) ? $template['id'] : 'Unknown';
+            $name = isset($template['name']) ? $template['name'] : 'Unnamed';
+            echo "    - $name ($id)\n";
         }
     } else {
         echo "Error: " . $listResponse->getErrors()->getMessage() . "\n";
@@ -279,16 +271,16 @@ try {
 
 echo "\n";
 
-// Example 6: Create template for different country
-echo "6. Creating template for UK\n";
-echo "---------------------------\n";
+// Example 6: Create UK-specific template
+echo "6. Creating UK-specific template\n";
+echo "--------------------------------\n";
 
 $ukTemplateData = [
-    'name' => 'UK Template',
-    'footer' => 'Registered in England and Wales',
+    'name' => 'UK Business Template',
+    'footer' => 'Registered in England and Wales. Company No: 12345678. VAT No: GB123456789',
     'colors' => [
         'primary' => '#1e40af',
-        'secondary' => '#eff6ff'
+        'secondary' => '#f1f5f9'
     ],
     'localized_address' => [
         'address_line1' => '10 Downing Street',
@@ -299,15 +291,15 @@ $ukTemplateData = [
 ];
 
 try {
-    $ukResponse = $businessGateway->eInvoiceTemplateService()->createTemplate($ukTemplateData);
+    $ukResponse = $businessGateway->invoiceTemplateService()->createTemplate($ukTemplateData);
 
     if ($ukResponse->isSuccessful()) {
         echo "UK template created successfully\n";
         $responseData = $ukResponse->getDecodeResponse();
-        $ukTemplateId = $responseData['data']['id'] ?? 'IT-UK-' . time();
+        $ukTemplateId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'IT-UK-' . time();
         echo "  Template ID: $ukTemplateId\n";
-        echo "  Country: GB (United Kingdom)\n";
-        echo "  Address format: UK postal code format\n";
+        echo "  UK Address: {$ukTemplateData['localized_address']['address_line1']}, {$ukTemplateData['localized_address']['locality']}\n";
+        echo "  Postal Code: {$ukTemplateData['localized_address']['postal_code']}\n";
     } else {
         echo "Error: " . $ukResponse->getErrors()->getMessage() . "\n";
     }
@@ -317,69 +309,32 @@ try {
 
 echo "\n";
 
-// Example 7: Create template with generic address
-echo "7. Creating template with generic address\n";
-echo "-----------------------------------------\n";
-
-$genericTemplateData = [
-    'name' => 'Generic Address Template',
-    'address' => '789 International Blvd, Global City, GC 12345, World',
-    'footer' => 'International Business Solutions',
-    'colors' => [
-        'primary' => '#7c3aed',
-        'secondary' => '#f3e8ff'
-    ],
-    'country_code' => 'XX'
-];
-
-try {
-    $genericResponse = $businessGateway->eInvoiceTemplateService()->createTemplate($genericTemplateData);
-
-    if ($genericResponse->isSuccessful()) {
-        echo "Generic template created successfully\n";
-        $responseData = $genericResponse->getDecodeResponse();
-        $genericTemplateId = $responseData['data']['id'] ?? 'IT-GENERIC-' . time();
-        echo "  Template ID: $genericTemplateId\n";
-        echo "  Generic Address: {$genericTemplateData['address']}\n";
-        echo "  Country: {$genericTemplateData['country_code']}\n";
-    } else {
-        echo "Error: " . $genericResponse->getErrors()->getMessage() . "\n";
-    }
-} catch (FasterPay\Exception $e) {
-    echo "Exception: " . $e->getMessage() . "\n";
-}
-
-echo "\n";
-
-// Example 8: Search templates with filters
-echo "8. Searching templates with name filter\n";
-echo "---------------------------------------\n";
+// Example 7: Search templates by name
+echo "7. Searching templates by name\n";
+echo "------------------------------\n";
 
 $searchFilters = [
-    'page' => 1,
-    'per_page' => 5,
-    'filter' => [
-        'name' => 'Professional'
-    ]
+    'filter' => 'Professional',
+    'per_page' => 5
 ];
 
 try {
-    $searchResponse = $businessGateway->eInvoiceTemplateService()->listTemplates($searchFilters);
+    $searchResponse = $businessGateway->invoiceTemplateService()->listTemplates($searchFilters);
 
     if ($searchResponse->isSuccessful()) {
         echo "Template search completed\n";
         $searchData = $searchResponse->getDecodeResponse();
-        $searchResults = $searchData['data']['data'] ?? [];
+        $templates = isset($searchData['data']['data']) ? $searchData['data']['data'] : [];
 
-        echo "  Search filter: name contains 'Professional'\n";
-        echo "  Found templates: " . count($searchResults) . "\n";
-
-        if (!empty($searchResults)) {
-            foreach ($searchResults as $template) {
-                $id = $template['id'] ?? 'Unknown';
-                $name = $template['name'] ?? 'Unnamed';
+        if (count($templates) > 0) {
+            echo "  Found " . count($templates) . " matching templates:\n";
+            foreach ($templates as $template) {
+                $id = isset($template['id']) ? $template['id'] : 'Unknown';
+                $name = isset($template['name']) ? $template['name'] : 'Unnamed';
                 echo "    - $name ($id)\n";
             }
+        } else {
+            echo "  No templates found matching 'Professional'\n";
         }
     } else {
         echo "Error: " . $searchResponse->getErrors()->getMessage() . "\n";
@@ -390,14 +345,57 @@ try {
 
 echo "\n";
 
+// Example 8: Bulk template operations
+echo "8. Bulk template operations\n";
+echo "---------------------------\n";
+
+$bulkTemplates = [
+    [
+        'name' => 'Minimal Template',
+        'footer' => 'Simple and clean invoice design',
+        'colors' => ['primary' => '#374151', 'secondary' => '#f9fafb']
+    ],
+    [
+        'name' => 'Corporate Template',
+        'footer' => 'Professional corporate invoice template',
+        'colors' => ['primary' => '#1f2937', 'secondary' => '#f3f4f6']
+    ]
+];
+
+foreach ($bulkTemplates as $templateData) {
+    $templateData['country_code'] = 'US';
+    $templateData['localized_address'] = [
+        'address_line1' => '123 Business St',
+        'locality' => 'Business City',
+        'administrative_area' => 'CA',
+        'postal_code' => '90210'
+    ];
+
+    try {
+        $response = $businessGateway->invoiceTemplateService()->createTemplate($templateData);
+
+        if ($response->isSuccessful()) {
+            $responseData = $response->getDecodeResponse();
+            $id = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'IT-BULK-' . time();
+            echo "  Created: {$templateData['name']} (ID: $id)\n";
+        } else {
+            echo "  Error creating {$templateData['name']}: " . $response->getErrors()->getMessage() . "\n";
+        }
+    } catch (FasterPay\Exception $e) {
+        echo "  Exception creating {$templateData['name']}: " . $e->getMessage() . "\n";
+    }
+}
+
+echo "\n";
+
 // Example 9: Delete a template
 echo "9. Deleting a template\n";
 echo "----------------------\n";
 
-$deleteTemplateId = $ukTemplateId ?? 'IT-DELETE-' . time();
+$deleteTemplateId = isset($ukTemplateId) ? $ukTemplateId : 'IT-DELETE-' . time();
 
 try {
-    $deleteResponse = $businessGateway->eInvoiceTemplateService()->deleteTemplate($deleteTemplateId);
+    $deleteResponse = $businessGateway->invoiceTemplateService()->deleteTemplate($deleteTemplateId);
 
     if ($deleteResponse->isSuccessful()) {
         echo "Template deleted successfully\n";
@@ -409,7 +407,7 @@ try {
     echo "Exception: " . $e->getMessage() . "\n";
 }
 
-echo "\nE-Invoice Template API examples completed!\n";
+echo "\nInvoice Template API examples completed!\n";
 echo "Use cases:\n";
 echo "- Brand-consistent invoice design\n";
 echo "- Multi-country invoice templates\n";

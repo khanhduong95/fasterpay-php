@@ -5,7 +5,6 @@ require_once('../../lib/autoload.php');
 $businessGateway = new FasterPay\BusinessGateway([
     'publicKey' => '<your-public-key>',
     'privateKey' => '<your-private-key>',
-    'isTest' => 1
 ]);
 
 echo "=== FasterPay Mass Payout API Examples ===\n\n";
@@ -47,10 +46,10 @@ try {
     if ($massPayoutResponse->isSuccessful()) {
         echo "Mass payout created successfully\n";
         $responseData = $massPayoutResponse->getDecodeResponse();
-        
+
         // Extract payout IDs from response for further operations
-        if (isset($responseData['data']['payouts']) && is_array($responseData['data']['payouts'])) {
-            foreach ($responseData['data']['payouts'] as $payoutItem) {
+        if (isset($responseData['data']) && is_array($responseData['data'])) {
+            foreach ($responseData['data'] as $payoutItem) {
                 $createdPayoutIds[] = $payoutItem['id'];
                 echo "Payout ID: " . $payoutItem['id'] . " - Status: " . $payoutItem['status'] . "\n";
             }
@@ -71,14 +70,14 @@ echo "-------------------------\n";
 if (!empty($createdPayoutIds)) {
     $payoutId = $createdPayoutIds[0]; // Use first created payout ID
     echo "Using payout ID from create response: " . $payoutId . "\n";
-    
+
     try {
         $payoutDetails = $businessGateway->payoutService()->getPayoutDetails($payoutId);
 
         if ($payoutDetails->isSuccessful()) {
             echo "Payout details retrieved successfully\n";
             $responseData = $payoutDetails->getDecodeResponse();
-            
+
             if (isset($responseData['data'])) {
                 $data = $responseData['data'];
                 echo "Payout ID: " . $data['id'] . "\n";
@@ -103,11 +102,8 @@ echo "3. Getting payout list with filters\n";
 echo "-----------------------------------\n";
 
 $filters = [
-    'limit' => 20,
-    'offset' => 0,
-    'status' => 'submitted',
-    'from_date' => '2024-01-01',
-    'to_date' => '2024-12-31'
+    'per_page' => 20,
+    'page' => 1,
 ];
 
 try {
@@ -116,12 +112,12 @@ try {
     if ($payoutList->isSuccessful()) {
         echo "Payout list retrieved successfully\n";
         $responseData = $payoutList->getDecodeResponse();
-        
-        if (isset($responseData['data']['payouts']) && is_array($responseData['data']['payouts'])) {
-            echo "Found " . count($responseData['data']['payouts']) . " payouts\n";
-            foreach ($responseData['data']['payouts'] as $payout) {
-                echo "- " . $payout['id'] . " (" . $payout['status'] . ") - " . 
-                     $payout['amounts']['target_amount'] . " " . $payout['amounts']['target_currency'] . "\n";
+
+        if (isset($responseData['data']['data']) && is_array($responseData['data']['data'])) {
+            echo "Found " . count($responseData['data']['data']) . " payouts\n";
+            foreach ($responseData['data']['data'] as $payout) {
+                echo "- " . $payout['id'] . " (" . $payout['status'] . ") - " .
+                    $payout['amounts']['target_amount'] . " " . $payout['amounts']['target_currency'] . "\n";
             }
         }
     } else {

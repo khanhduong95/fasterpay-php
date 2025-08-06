@@ -5,7 +5,6 @@ require_once('../../lib/autoload.php');
 $businessGateway = new FasterPay\BusinessGateway([
     'publicKey' => '<your-public-key>',
     'privateKey' => '<your-private-key>',
-    'isTest' => 1,
 ]);
 
 echo "FasterPay Contact API Examples\n";
@@ -113,7 +112,8 @@ echo "4. Updating contact information\n";
 echo "-------------------------------\n";
 
 $updateData = [
-    'phone' => '2015559999',
+    'phone' => '2015550125',
+    'phone_country_code' => 'US',
     'favorite' => false,
     'first_name' => 'Jonathan'
 ];

@@ -5,21 +5,20 @@ require_once('../../../lib/autoload.php');
 $businessGateway = new FasterPay\BusinessGateway([
     'publicKey' => '<your-public-key>',
     'privateKey' => '<your-private-key>',
-    'isTest' => 1,
 ]);
 
-echo "FasterPay E-Invoice Product API Examples\n";
-echo "=========================================\n\n";
+echo "FasterPay Invoice Product API Examples\n";
+echo "=======================================\n\n";
 
-// Example 1: Create a digital product with multiple currencies
-echo "1. Creating a digital product with multiple currencies\n";
-echo "------------------------------------------------------\n";
+// Example 1: Create a new product
+echo "1. Creating a new product\n";
+echo "-------------------------\n";
 
-$digitalProductData = [
-    'name' => 'Website Development Package',
-    'sku' => 'WEB-DEV-001',
+$productData = [
+    'name' => 'Professional Website Package',
+    'sku' => 'WEB-PRO-001',
     'type' => 'digital',
-    'description' => 'Complete website development with modern responsive design, SEO optimization, and content management system.',
+    'description' => 'Complete professional website package with responsive design and SEO optimization',
     'prices' => [
         [
             'price' => 2500.00,
@@ -28,29 +27,24 @@ $digitalProductData = [
         [
             'price' => 2100.00,
             'currency' => 'EUR'
-        ],
-        [
-            'price' => 1850.00,
-            'currency' => 'GBP'
         ]
     ]
 ];
 
 try {
-    $digitalProductResponse = $businessGateway->eInvoiceProductService()->createProduct($digitalProductData);
+    $productResponse = $businessGateway->invoiceProductService()->createProduct($productData);
 
-    if ($digitalProductResponse->isSuccessful()) {
-        echo "Digital product created successfully\n";
-        $responseData = $digitalProductResponse->getDecodeResponse();
-        $digitalProductId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'PD-DIGITAL-' . time();
-        echo "  Product ID: " . $digitalProductId . "\n";
-        echo "  SKU: " . $digitalProductData['sku'] . "\n";
-        echo "  Name: " . $digitalProductData['name'] . "\n";
-        echo "  Type: " . $digitalProductData['type'] . "\n";
-        echo "  Prices: USD 2500.00 / EUR 2100.00 / GBP 1850.00\n";
-        echo "  Image URL: " . (isset($responseData['data']['image_url']) ? $responseData['data']['image_url'] : 'No image uploaded') . "\n";
+    if ($productResponse->isSuccessful()) {
+        echo "Product created successfully\n";
+        $responseData = $productResponse->getDecodeResponse();
+        $productId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'PD-' . time();
+        echo "  Product ID: " . $productId . "\n";
+        echo "  SKU: " . $productData['sku'] . "\n";
+        echo "  Name: " . $productData['name'] . "\n";
+        echo "  Type: " . $productData['type'] . "\n";
+        echo "  Prices: " . count($productData['prices']) . " currencies\n";
     } else {
-        echo "Error: " . $digitalProductResponse->getErrors()->getMessage() . "\n";
+        echo "Error: " . $productResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
     echo "Exception: " . $e->getMessage() . "\n";
@@ -58,43 +52,43 @@ try {
 
 echo "\n";
 
-// Example 2: Create a physical product with image upload (multipart)
-echo "2. Creating a physical product with image upload\n";
-echo "------------------------------------------------\n";
+// Example 2: Create product with image
+echo "2. Creating product with image\n";
+echo "------------------------------\n";
 
-$physicalProductData = [
-    'name' => 'Professional Laptop 15 inch',
-    'sku' => 'LAPTOP-PRO-15',
-    'type' => 'physical',
-    'description' => 'High-performance laptop with 16GB RAM, 512GB SSD, and professional graphics card. Perfect for developers and designers.',
-    'image' => '/path/to/laptop-image.jpg', // This will trigger multipart upload
+$productWithImageData = [
+    'name' => 'Premium Software License',
+    'sku' => 'SW-PREM-001',
+    'type' => 'digital',
+    'description' => 'Premium software license with full features and 1-year support',
     'prices' => [
         [
-            'price' => 1899.99,
+            'price' => 299.99,
             'currency' => 'USD'
-        ],
-        [
-            'price' => 1649.99,
-            'currency' => 'EUR'
         ]
-    ]
+    ],
+    'image' => '/path/to/product-image.jpg' // File path provided directly in params
 ];
 
 try {
-    $physicalProductResponse = $businessGateway->eInvoiceProductService()->createProduct($physicalProductData);
+    // Note: In real implementation, provide actual image file path in params['image']
+    // The service automatically detects file fields and uses multipart upload
 
-    if ($physicalProductResponse->isSuccessful()) {
-        echo "Physical product created successfully\n";
-        $responseData = $physicalProductResponse->getDecodeResponse();
-        $physicalProductId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'PD-PHYSICAL-' . time();
-        echo "  Product ID: " . $physicalProductId . "\n";
-        echo "  SKU: " . $physicalProductData['sku'] . "\n";
-        echo "  Name: " . $physicalProductData['name'] . "\n";
-        echo "  Type: " . $physicalProductData['type'] . "\n";
-        echo "  Prices: USD 1899.99 / EUR 1649.99\n";
-        echo "  Image URL: " . (isset($responseData['data']['image_url']) ? $responseData['data']['image_url'] : 'No image uploaded') . "\n";
+    // For demo purposes, create without image
+    $demoData = $productWithImageData;
+    unset($demoData['image']); // Remove for demo
+    $imageResponse = $businessGateway->invoiceProductService()->createProduct($demoData);
+
+    if ($imageResponse->isSuccessful()) {
+        echo "Product with image created successfully\n";
+        $responseData = $imageResponse->getDecodeResponse();
+        $imageProductId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'PD-IMG-' . time();
+        echo "  Product ID: " . $imageProductId . "\n";
+        echo "  Name: " . $productWithImageData['name'] . "\n";
+        echo "  Image: File would be uploaded automatically if 'image' field contains file path\n";
+        echo "  Usage: \$params['image'] = '/path/to/image.jpg'\n";
     } else {
-        echo "Error: " . $physicalProductResponse->getErrors()->getMessage() . "\n";
+        echo "Error: " . $imageResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
     echo "Exception: " . $e->getMessage() . "\n";
@@ -106,34 +100,30 @@ echo "\n";
 echo "3. Getting product details\n";
 echo "--------------------------\n";
 
-$productIdToGet = isset($digitalProductId) ? $digitalProductId : 'PD-250528-L5CC';
+$productId = isset($productId) ? $productId : 'PD-' . time();
 
 try {
-    $productDetailsResponse = $businessGateway->eInvoiceProductService()->getProduct($productIdToGet);
+    $detailsResponse = $businessGateway->invoiceProductService()->getProduct($productId);
 
-    if ($productDetailsResponse->isSuccessful()) {
-        echo "Product details retrieved successfully\n";
-        $productData = $productDetailsResponse->getDecodeResponse();
-        
-        if (isset($productData['data'])) {
-            $product = $productData['data'];
-            echo "  Product ID: " . (isset($product['id']) ? $product['id'] : 'N/A') . "\n";
-            echo "  SKU: " . (isset($product['sku']) ? $product['sku'] : 'N/A') . "\n";
-            echo "  Name: " . (isset($product['name']) ? $product['name'] : 'N/A') . "\n";
-            echo "  Type: " . (isset($product['type']) ? $product['type'] : 'N/A') . "\n";
-            echo "  Description: " . (isset($product['description']) ? substr($product['description'], 0, 100) . '...' : 'N/A') . "\n";
-            
-            if (isset($product['prices']) && is_array($product['prices'])) {
-                echo "  Prices:\n";
-                foreach ($product['prices'] as $price) {
-                    $priceAmount = isset($price['price']) ? $price['price'] : '0.00';
-                    $currency = isset($price['currency']) ? $price['currency'] : 'N/A';
-                    echo "    - " . $priceAmount . " " . $currency . "\n";
-                }
+    if ($detailsResponse->isSuccessful()) {
+        echo "Product details retrieved\n";
+        $details = $detailsResponse->getDecodeResponse();
+        $product = isset($details['data']) ? $details['data'] : [];
+
+        echo "  ID: " . (isset($product['id']) ? $product['id'] : $productId) . "\n";
+        echo "  Name: " . (isset($product['name']) ? $product['name'] : 'N/A') . "\n";
+        echo "  SKU: " . (isset($product['sku']) ? $product['sku'] : 'N/A') . "\n";
+        echo "  Type: " . (isset($product['type']) ? $product['type'] : 'N/A') . "\n";
+        echo "  Description: " . substr(isset($product['description']) ? $product['description'] : 'N/A', 0, 50) . "...\n";
+
+        if (isset($product['prices']) && is_array($product['prices'])) {
+            echo "  Prices:\n";
+            foreach ($product['prices'] as $price) {
+                echo "    - " . (isset($price['currency']) ? $price['currency'] : 'N/A') . ": " . (isset($price['price']) ? $price['price'] : '0.00') . "\n";
             }
         }
     } else {
-        echo "Error: " . $productDetailsResponse->getErrors()->getMessage() . "\n";
+        echo "Error: " . $detailsResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
     echo "Exception: " . $e->getMessage() . "\n";
@@ -141,42 +131,32 @@ try {
 
 echo "\n";
 
-// Example 4: Update product with image upload (multipart)
-echo "4. Updating product with image upload\n";
-echo "-------------------------------------\n";
-
-$productIdToUpdate = isset($physicalProductId) ? $physicalProductId : 'PD-UPDATE-' . time();
+// Example 4: Update product
+echo "4. Updating product\n";
+echo "-------------------\n";
 
 $updateData = [
-    'name' => 'Professional Laptop 15 inch - Updated Edition',
-    'description' => 'Updated high-performance laptop with enhanced features: 32GB RAM, 1TB SSD, and latest graphics card.',
-    'image' => '/path/to/updated-laptop-image.jpg', // This will trigger multipart upload
+    'name' => 'Updated Professional Website Package',
+    'description' => 'Enhanced professional website package with advanced SEO optimization and mobile app integration',
     'prices' => [
         [
-            'price' => 2199.99,
+            'price' => 2750.00,
             'currency' => 'USD'
         ],
         [
-            'price' => 1899.99,
+            'price' => 2300.00,
             'currency' => 'EUR'
-        ],
-        [
-            'price' => 1699.99,
-            'currency' => 'GBP'
         ]
     ]
 ];
 
 try {
-    $updateResponse = $businessGateway->eInvoiceProductService()->updateProduct($productIdToUpdate, $updateData);
+    $updateResponse = $businessGateway->invoiceProductService()->updateProduct($productId, $updateData);
 
     if ($updateResponse->isSuccessful()) {
         echo "Product updated successfully\n";
-        $responseData = $updateResponse->getDecodeResponse();
-        echo "  Product ID: " . $productIdToUpdate . "\n";
-        echo "  Updated Name: " . $updateData['name'] . "\n";
-        echo "  Updated Prices: USD 2199.99 / EUR 1899.99 / GBP 1699.99\n";
-        echo "  Image URL: " . (isset($responseData['data']['image_url']) ? $responseData['data']['image_url'] : 'No image uploaded') . "\n";
+        echo "  Updated name and description\n";
+        echo "  Updated prices for USD and EUR\n";
     } else {
         echo "Error: " . $updateResponse->getErrors()->getMessage() . "\n";
     }
@@ -186,40 +166,30 @@ try {
 
 echo "\n";
 
-// Example 5: List products with filters
-echo "5. Listing products with filters\n";
-echo "--------------------------------\n";
+// Example 5: List all products
+echo "5. Listing all products\n";
+echo "-----------------------\n";
 
-$filters = [
-    'limit' => 20,
-    'offset' => 0,
-    'type' => 'digital'
+$listFilters = [
+    'page' => 1,
+    'per_page' => 10
 ];
 
 try {
-    $listResponse = $businessGateway->eInvoiceProductService()->listProducts($filters);
+    $listResponse = $businessGateway->invoiceProductService()->listProducts($listFilters);
 
     if ($listResponse->isSuccessful()) {
-        echo "Product list retrieved successfully\n";
+        echo "Products list retrieved\n";
         $listData = $listResponse->getDecodeResponse();
-        
-        if (isset($listData['data']) && is_array($listData['data'])) {
-            echo "  Found " . count($listData['data']) . " digital products\n";
-            
-            // Display first few products
-            $products = array_slice($listData['data'], 0, 3);
-            foreach ($products as $product) {
-                $id = isset($product['id']) ? $product['id'] : 'Unknown';
-                $name = isset($product['name']) ? $product['name'] : 'Unnamed';
-                $sku = isset($product['sku']) ? $product['sku'] : 'No SKU';
-                $type = isset($product['type']) ? $product['type'] : 'Unknown';
-                
-                echo "    - " . $name . " (" . $id . ", SKU: " . $sku . ", Type: " . $type . ")\n";
-            }
-            
-            if (count($listData['data']) > 3) {
-                echo "    ... and " . (count($listData['data']) - 3) . " more\n";
-            }
+        $products = isset($listData['data']['data']) ? $listData['data']['data'] : [];
+
+        echo "  Found " . count($products) . " products\n";
+        foreach ($products as $product) {
+            $id = isset($product['id']) ? $product['id'] : 'Unknown';
+            $name = isset($product['name']) ? $product['name'] : 'Unnamed';
+            $sku = isset($product['sku']) ? $product['sku'] : 'No SKU';
+            $type = isset($product['type']) ? $product['type'] : 'unknown';
+            echo "    - $name ($sku) - Type: $type - ID: $id\n";
         }
     } else {
         echo "Error: " . $listResponse->getErrors()->getMessage() . "\n";
@@ -230,18 +200,66 @@ try {
 
 echo "\n";
 
-// Example 6: Delete product price
-echo "6. Deleting product price\n";
-echo "-------------------------\n";
+// Example 6: Create multiple products (bulk operation)
+echo "6. Creating multiple products (bulk operation)\n";
+echo "----------------------------------------------\n";
 
-$productIdForPriceDeletion = isset($digitalProductId) ? $digitalProductId : 'PD-PRICE-DELETE-' . time();
-$currencyToDelete = 'GBP';
+$bulkProducts = [
+    [
+        'name' => 'Basic Hosting Plan',
+        'sku' => 'HOST-BASIC-001',
+        'type' => 'digital',
+        'description' => 'Basic web hosting plan with 10GB storage',
+        'prices' => [['price' => 9.99, 'currency' => 'USD']]
+    ],
+    [
+        'name' => 'Premium Hosting Plan',
+        'sku' => 'HOST-PREM-001',
+        'type' => 'digital',
+        'description' => 'Premium web hosting plan with 100GB storage and SSL',
+        'prices' => [['price' => 29.99, 'currency' => 'USD']]
+    ],
+    [
+        'name' => 'Physical Marketing Kit',
+        'sku' => 'MKT-KIT-001',
+        'type' => 'physical',
+        'description' => 'Complete marketing kit with brochures and business cards',
+        'prices' => [['price' => 149.99, 'currency' => 'USD']]
+    ]
+];
+
+foreach ($bulkProducts as $productData) {
+    try {
+        $response = $businessGateway->invoiceProductService()->createProduct($productData);
+
+        if ($response->isSuccessful()) {
+            $responseData = $response->getDecodeResponse();
+            $id = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'PD-BULK-' . time();
+            $price = $productData['prices'][0]['price'];
+            $currency = $productData['prices'][0]['currency'];
+            echo "  Created: {$productData['name']} (SKU: {$productData['sku']}, Price: $price $currency)\n";
+        } else {
+            echo "  Error creating {$productData['name']}: " . $response->getErrors()->getMessage() . "\n";
+        }
+    } catch (FasterPay\Exception $e) {
+        echo "  Exception creating {$productData['name']}: " . $e->getMessage() . "\n";
+    }
+}
+
+echo "\n";
+
+// Example 7: Delete price from product
+echo "7. Deleting price from product\n";
+echo "------------------------------\n";
+
+$productIdForPriceDeletion = isset($productId) ? $productId : 'PD-' . time();
+$currencyToDelete = 'EUR';
 
 try {
-    $deletePriceResponse = $businessGateway->eInvoiceProductService()->deleteProductPrice($productIdForPriceDeletion, $currencyToDelete);
+    $deletePriceResponse = $businessGateway->invoiceProductService()->deleteProductPrice($productIdForPriceDeletion, $currencyToDelete);
 
     if ($deletePriceResponse->isSuccessful()) {
-        echo "Product price deleted successfully\n";
+        echo "Price deleted successfully\n";
         echo "  Product ID: " . $productIdForPriceDeletion . "\n";
         echo "  Deleted Currency: " . $currencyToDelete . "\n";
     } else {
@@ -253,8 +271,8 @@ try {
 
 echo "\n";
 
-// Example 7: Create service products
-echo "7. Creating service products\n";
+// Example 8: Create service products
+echo "8. Creating service products\n";
 echo "----------------------------\n";
 
 $serviceProducts = [
@@ -290,7 +308,7 @@ $serviceProducts = [
 
 foreach ($serviceProducts as $serviceData) {
     try {
-        $serviceResponse = $businessGateway->eInvoiceProductService()->createProduct($serviceData);
+        $serviceResponse = $businessGateway->invoiceProductService()->createProduct($serviceData);
 
         if ($serviceResponse->isSuccessful()) {
             $responseData = $serviceResponse->getDecodeResponse();
@@ -309,14 +327,14 @@ foreach ($serviceProducts as $serviceData) {
 
 echo "\n";
 
-// Example 8: Delete product
-echo "8. Deleting product\n";
-echo "-------------------\n";
+// Example 10: Delete product
+echo "10. Deleting product\n";
+echo "--------------------\n";
 
 $productToDelete = 'PD-DELETE-' . time();
 
 try {
-    $deleteResponse = $businessGateway->eInvoiceProductService()->deleteProduct($productToDelete);
+    $deleteResponse = $businessGateway->invoiceProductService()->deleteProduct($productToDelete);
 
     if ($deleteResponse->isSuccessful()) {
         echo "Product deleted successfully\n";
@@ -328,7 +346,7 @@ try {
     echo "Exception: " . $e->getMessage() . "\n";
 }
 
-echo "\nE-Invoice Product API examples completed!\n";
+echo "\nInvoice Product API examples completed!\n";
 echo "Use cases:\n";
 echo "• Product catalog management\n";
 echo "• Multi-currency pricing\n";

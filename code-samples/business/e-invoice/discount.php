@@ -5,10 +5,9 @@ require_once('../../../lib/autoload.php');
 $businessGateway = new FasterPay\BusinessGateway([
     'publicKey' => '<your-public-key>',
     'privateKey' => '<your-private-key>',
-    'isTest' => 1,
 ]);
 
-echo "FasterPay E-Invoice Discount API Examples\n";
+echo "FasterPay Invoice Discount API Examples\n";
 echo "==========================================\n\n";
 
 // Example 1: Create a flat discount
@@ -24,7 +23,7 @@ $flatDiscountData = [
 ];
 
 try {
-    $discountResponse = $businessGateway->eInvoiceDiscountService()->createDiscount($flatDiscountData);
+    $discountResponse = $businessGateway->invoiceDiscountService()->createDiscount($flatDiscountData);
 
     if ($discountResponse->isSuccessful()) {
         echo "✓ Flat discount created successfully\n";
@@ -56,7 +55,7 @@ $percentageDiscountData = [
 ];
 
 try {
-    $volumeResponse = $businessGateway->eInvoiceDiscountService()->createDiscount($percentageDiscountData);
+    $volumeResponse = $businessGateway->invoiceDiscountService()->createDiscount($percentageDiscountData);
 
     if ($volumeResponse->isSuccessful()) {
         echo "✓ Percentage discount created successfully\n";
@@ -88,7 +87,7 @@ $loyaltyDiscountData = [
 ];
 
 try {
-    $loyaltyResponse = $businessGateway->eInvoiceDiscountService()->createDiscount($loyaltyDiscountData);
+    $loyaltyResponse = $businessGateway->invoiceDiscountService()->createDiscount($loyaltyDiscountData);
 
     if ($loyaltyResponse->isSuccessful()) {
         echo "✓ Loyalty discount created successfully\n";
@@ -115,7 +114,7 @@ echo "------------------------------\n";
 $testDiscountId = isset($discountId) ? $discountId : 'DC-250527-WZX0';
 
 try {
-    $getDiscountResponse = $businessGateway->eInvoiceDiscountService()->getDiscount($testDiscountId);
+    $getDiscountResponse = $businessGateway->invoiceDiscountService()->getDiscount($testDiscountId);
 
     if ($getDiscountResponse->isSuccessful()) {
         echo "✓ Discount details retrieved successfully\n";
@@ -151,7 +150,7 @@ $updateDiscountData = [
 ];
 
 try {
-    $updateResponse = $businessGateway->eInvoiceDiscountService()->updateDiscount($testDiscountId, $updateDiscountData);
+    $updateResponse = $businessGateway->invoiceDiscountService()->updateDiscount($testDiscountId, $updateDiscountData);
 
     if ($updateResponse->isSuccessful()) {
         echo "✓ Discount updated successfully\n";
@@ -178,14 +177,14 @@ $filters = [
 ];
 
 try {
-    $listResponse = $businessGateway->eInvoiceDiscountService()->listDiscounts($filters);
+    $listResponse = $businessGateway->invoiceDiscountService()->listDiscounts($filters);
 
     if ($listResponse->isSuccessful()) {
         echo "✓ Discount list retrieved successfully\n";
         $listData = $listResponse->getDecodeResponse();
-        if (isset($listData['data']) && is_array($listData['data'])) {
-            echo "  Found " . count($listData['data']) . " discounts:\n";
-            foreach ($listData['data'] as $discount) {
+        if (isset($listData['data']['data']) && is_array($listData['data']['data'])) {
+            echo "  Found " . count($listData['data']['data']) . " discounts:\n";
+            foreach ($listData['data']['data'] as $discount) {
                 $id = isset($discount['id']) ? $discount['id'] : 'Unknown';
                 $name = isset($discount['name']) ? $discount['name'] : 'Unnamed';
                 $type = isset($discount['type']) ? $discount['type'] : 'Unknown';
@@ -210,7 +209,7 @@ echo "--------------------\n";
 $deleteTestDiscountId = isset($loyaltyDiscountId) ? $loyaltyDiscountId : 'DC-DELETE-' . time();
 
 try {
-    $deleteResponse = $businessGateway->eInvoiceDiscountService()->deleteDiscount($deleteTestDiscountId);
+    $deleteResponse = $businessGateway->invoiceDiscountService()->deleteDiscount($deleteTestDiscountId);
 
     if ($deleteResponse->isSuccessful()) {
         echo "✓ Discount deleted successfully\n";
@@ -224,101 +223,7 @@ try {
 
 echo "\n";
 
-// Example 8: Using discounts in invoices (embedded discount object)
-echo "8. Using discounts in invoices\n";
-echo "------------------------------\n";
-
-$invoiceWithDiscountData = [
-    'currency' => 'USD',
-    'summary' => 'Invoice with embedded discount',
-    'number' => 'INV-DISC-' . date('Y') . '-' . sprintf('%06d', rand(1, 999999)),
-    'contact_id' => 'CT-250527-AZARCIJE',
-    'discount' => [
-        'name' => 'Seasonal Discount',
-        'type' => 'percentage',
-        'value' => 20,
-        'description' => '20% seasonal discount'
-    ],
-    'items' => [
-        [
-            'price' => 200.00,
-            'quantity' => 1,
-            'name' => 'Premium Service Package',
-            'description' => 'Comprehensive service package'
-        ]
-    ]
-];
-
-try {
-    $invoiceResponse = $businessGateway->eInvoiceService()->createInvoice($invoiceWithDiscountData);
-
-    if ($invoiceResponse->isSuccessful()) {
-        echo "✓ Invoice with embedded discount created successfully\n";
-        $responseData = $invoiceResponse->getDecodeResponse();
-        $invoiceId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'FPBIV-' . time();
-        echo "  Invoice ID: " . $invoiceId . "\n";
-        echo "  Invoice Number: " . $invoiceWithDiscountData['number'] . "\n";
-        echo "  Discount: " . $invoiceWithDiscountData['discount']['name'] . " (" . $invoiceWithDiscountData['discount']['value'] . "%)\n";
-    } else {
-        echo "✗ Error: " . $invoiceResponse->getErrors()->getMessage() . "\n";
-    }
-} catch (FasterPay\Exception $e) {
-    echo "✗ Exception: " . $e->getMessage() . "\n";
-}
-
-echo "\n";
-
-// Example 9: Create invoice with both tax and discount
-echo "9. Creating invoice with tax and discount\n";
-echo "-----------------------------------------\n";
-
-$combinedInvoiceData = [
-    'currency' => 'USD',
-    'summary' => 'Invoice with tax and discount',
-    'number' => 'INV-COMBO-' . date('Y') . '-' . sprintf('%06d', rand(1, 999999)),
-    'contact_id' => 'CT-250527-AZARCIJE',
-    'tax' => [
-        'name' => 'Sales Tax',
-        'type' => 'percentage',
-        'value' => 8.5,
-        'description' => '8.5% sales tax'
-    ],
-    'discount' => [
-        'name' => 'First Time Customer',
-        'type' => 'flat',
-        'value' => 25.00,
-        'currency' => 'USD',
-        'description' => '$25 discount for first-time customers'
-    ],
-    'items' => [
-        [
-            'price' => 500.00,
-            'quantity' => 1,
-            'name' => 'Professional Services',
-            'description' => 'Complete professional service package'
-        ]
-    ]
-];
-
-try {
-    $comboResponse = $businessGateway->eInvoiceService()->createInvoice($combinedInvoiceData);
-
-    if ($comboResponse->isSuccessful()) {
-        echo "✓ Invoice with tax and discount created successfully\n";
-        $responseData = $comboResponse->getDecodeResponse();
-        $comboInvoiceId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'FPBIV-' . time();
-        echo "  Invoice ID: " . $comboInvoiceId . "\n";
-        echo "  Invoice Number: " . $combinedInvoiceData['number'] . "\n";
-        echo "  Tax: " . $combinedInvoiceData['tax']['name'] . " (" . $combinedInvoiceData['tax']['value'] . "%)\n";
-        echo "  Discount: " . $combinedInvoiceData['discount']['name'] . " ($" . $combinedInvoiceData['discount']['value'] . ")\n";
-    } else {
-        echo "✗ Error: " . $comboResponse->getErrors()->getMessage() . "\n";
-    }
-} catch (FasterPay\Exception $e) {
-    echo "✗ Exception: " . $e->getMessage() . "\n";
-}
-
-echo "\nE-Invoice Discount API examples completed!\n";
+echo "\nInvoice Discount API examples completed!\n";
 echo "Use cases:\n";
 echo "• Early payment incentives\n";
 echo "• Volume purchase discounts\n";

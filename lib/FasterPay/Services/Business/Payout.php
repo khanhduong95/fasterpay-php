@@ -3,7 +3,7 @@
 namespace FasterPay\Services\Business;
 
 use FasterPay\Exception;
-use FasterPay\Response\GeneralResponse;
+use FasterPay\Response\JsonResponse;
 use FasterPay\Services\GeneralService;
 
 class Payout extends GeneralService
@@ -14,22 +14,22 @@ class Payout extends GeneralService
      * Create a mass payout
      *
      * @param array $params Payout parameters
-     * @return GeneralResponse
+     * @return JsonResponse
      */
-    public function createPayout($params = [])
+    public function createPayout(array $params = [])
     {
         $endpoint = $this->httpService->getEndPoint($this->endpoint);
 
         $response = $this->httpService->getHttpClient()->post($endpoint, $params);
 
-        return new GeneralResponse($response);
+        return new JsonResponse($response);
     }
 
     /**
      * Get payout details
      *
      * @param string $payoutId Payout ID
-     * @return GeneralResponse
+     * @return JsonResponse
      * @throws Exception
      */
     public function getPayoutDetails($payoutId = '')
@@ -42,21 +42,21 @@ class Payout extends GeneralService
 
         $response = $this->httpService->getHttpClient()->get($endpoint);
 
-        return new GeneralResponse($response);
+        return new JsonResponse($response);
     }
 
     /**
      * Get payout list
      *
      * @param array $filters Optional filters (limit, offset, status, etc.)
-     * @return GeneralResponse
+     * @return JsonResponse
      */
-    public function getPayoutList($filters = [])
+    public function getPayoutList(array $filters = [])
     {
         $endpoint = $this->httpService->getEndPoint($this->endpoint);
 
         $response = $this->httpService->getHttpClient()->get($endpoint, $filters);
 
-        return new GeneralResponse($response);
+        return new JsonResponse($response);
     }
 }

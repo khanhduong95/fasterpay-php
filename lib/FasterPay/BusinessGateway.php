@@ -17,13 +17,11 @@ use FasterPay\Services\Pingback;
 
 class BusinessGateway implements GatewayInterface
 {
-    const BUSINESS_API_BASE_URL = 'https://develop.ma.fasterpay.bamboo.stuffio.com';
-    const BUSINESS_API_SANDBOX_BASE_URL = 'https://business.sandbox.fasterpay.com';
+    const BUSINESS_API_BASE_URL = 'https://business.fasterpay.com';
 
     protected $config;
     protected $http;
     protected $baseUrl = '';
-    protected $extraParams = [];
 
     public function __construct($config = [])
     {
@@ -32,13 +30,7 @@ class BusinessGateway implements GatewayInterface
         }
 
         $this->config = $config;
-
-        // Override the base URL for business APIs
-        if ($this->config->getIsTest()) {
-            $this->config->setBaseUrl(self::BUSINESS_API_SANDBOX_BASE_URL);
-        } else {
-            $this->config->setBaseUrl(self::BUSINESS_API_BASE_URL);
-        }
+        $this->config->setBaseUrl(self::BUSINESS_API_BASE_URL);
 
         $header = [
             'X-ApiKey: ' . $this->config->getPrivateKey(),
@@ -160,13 +152,5 @@ class BusinessGateway implements GatewayInterface
     public function getConfig()
     {
         return $this->config;
-    }
-
-    public function callApi($endpoint, array $payload, $method = GenericApiService::HTTP_METHOD_POST, $header = [])
-    {
-        $endpoint = $this->getEndPoint($endpoint);
-
-        $service = new GenericApiService(new HttpClient);
-        return $service->call($endpoint, $payload, $method, $header);
     }
 }
