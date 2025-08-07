@@ -5,10 +5,9 @@ require_once('../../../lib/autoload.php');
 $businessGateway = new FasterPay\BusinessGateway([
     'publicKey' => '<your-public-key>',
     'privateKey' => '<your-private-key>',
-    'isTest' => 1,
 ]);
 
-echo "FasterPay E-Invoice Product API Examples\n";
+echo "FasterPay Invoice Product API Examples\n";
 echo "=========================================\n\n";
 
 // Example 1: Create product
@@ -31,7 +30,7 @@ $createData = [
 ];
 
 try {
-    $response = $businessGateway->eInvoiceProductService()->createProduct($createData);
+    $response = $businessGateway->invoiceProductService()->createProduct($createData);
 
     if ($response->isSuccessful()) {
         echo "Product created successfully\n";
@@ -54,7 +53,7 @@ echo "2. Getting product details\n";
 echo "--------------------------\n";
 
 try {
-    $response = $businessGateway->eInvoiceProductService()->getProduct($productId);
+    $response = $businessGateway->invoiceProductService()->getProduct($productId);
 
     if ($response->isSuccessful()) {
         echo "Product details retrieved\n";
@@ -92,7 +91,7 @@ $updateData = [
 ];
 
 try {
-    $response = $businessGateway->eInvoiceProductService()->updateProduct($productId, $updateData);
+    $response = $businessGateway->invoiceProductService()->updateProduct($productId, $updateData);
 
     if ($response->isSuccessful()) {
         echo "Product updated successfully\n";
@@ -111,7 +110,7 @@ echo "4. Listing products\n";
 echo "-------------------\n";
 
 try {
-    $response = $businessGateway->eInvoiceProductService()->listProducts(['limit' => 10, 'offset' => 0]);
+    $response = $businessGateway->invoiceProductService()->listProducts(['limit' => 10, 'offset' => 0]);
 
     if ($response->isSuccessful()) {
         echo "Products retrieved successfully\n";
@@ -138,7 +137,7 @@ echo "5. Deleting product price\n";
 echo "-------------------------\n";
 
 try {
-    $response = $businessGateway->eInvoiceProductService()->deleteProductPrice($productId, 'USD');
+    $response = $businessGateway->invoiceProductService()->deleteProductPrice($productId, 'USD');
 
     if ($response->isSuccessful()) {
         echo "Product price deleted successfully\n";
@@ -157,7 +156,7 @@ echo "6. Deleting product\n";
 echo "-------------------\n";
 
 try {
-    $response = $businessGateway->eInvoiceProductService()->deleteProduct($productId);
+    $response = $businessGateway->invoiceProductService()->deleteProduct($productId);
 
     if ($response->isSuccessful()) {
         echo "Product deleted successfully\n";
@@ -169,4 +168,4 @@ try {
     echo "Exception: " . $e->getMessage() . "\n";
 }
 
-echo "\nE-Invoice Product API examples completed!\n";
+echo "\nInvoice Product API examples completed!\n";
