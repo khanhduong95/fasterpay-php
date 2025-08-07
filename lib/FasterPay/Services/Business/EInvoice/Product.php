@@ -21,7 +21,6 @@ class Product extends GeneralService
     {
         $endpoint = $this->httpService->getEndPoint($this->endpoint);
 
-        // Use POST method - HttpClient will auto-detect files and use multipart if needed
         $response = $this->httpService->getHttpClient()->post($endpoint, $params);
 
         return new GeneralResponse($response);
@@ -64,7 +63,6 @@ class Product extends GeneralService
 
         $endpoint = $this->httpService->getEndPoint($this->endpoint . '/' . $productId);
 
-        // Use PUT method - HttpClient will auto-detect files and use POST + _method=PUT if needed
         $response = $this->httpService->getHttpClient()->put($endpoint, $params);
 
         return new GeneralResponse($response);
