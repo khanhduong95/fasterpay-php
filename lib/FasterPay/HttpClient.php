@@ -84,7 +84,18 @@ class HttpClient
 
         foreach ($files as $fieldName => $fileValue) {
             if (is_object($fileValue)) {
-                $postData[$fieldName] = $fileValue;
+                if ($fileValue instanceof \SplFileInfo) {
+                    // Convert SplFileInfo to file path for HTTP compatibility
+                    $filePath = $fileValue->getPathname();
+                    if (class_exists('CURLFile')) {
+                        $postData[$fieldName] = new \CURLFile($filePath);
+                    } else {
+                        $postData[$fieldName] = '@' . $filePath;
+                    }
+                } else {
+                    // Handle other file objects (CURLFile, etc.)
+                    $postData[$fieldName] = $fileValue;
+                }
             } elseif (is_string($fileValue) && file_exists($fileValue)) {
                 if (class_exists('CURLFile')) {
                     $postData[$fieldName] = new \CURLFile($fileValue);
@@ -104,19 +115,6 @@ class HttpClient
             'response' => $response,
             'httpCode' => $info['http_code']
         ];
-    }
-
-    private function buildPostData(array $data, array &$postData, $prefix)
-    {
-        foreach ($data as $key => $value) {
-            $currentKey = $prefix ? $prefix . '[' . $key . ']' : $key;
-            
-            if (is_array($value)) {
-                $this->buildPostData($value, $postData, $currentKey);
-            } else {
-                $postData[$currentKey] = $value;
-            }
-        }
     }
 
     private function buildPostData(array $data, array &$postData, $prefix)
