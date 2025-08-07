@@ -1,22 +1,28 @@
 <?php
 
 /**
- * FasterPay E-Invoice API Examples
- *
- * Complete examples using BusinessGateway and proper service architecture
- * Uses PHP 5.4+ latest syntax features (short arrays, etc.)
+ * FasterPay E-Invoice API - Complete Component Creation & Invoice Examples
+ * Creates invoice components first to get their IDs, then uses those IDs for invoices
  */
 
 require_once('../../../lib/autoload.php');
 
 // Initialize BusinessGateway
 $businessGateway = new FasterPay\BusinessGateway([
-    'publicKey' => '<your-public-key>',
-    'privateKey' => '<your-private-key>',
+    'publicKey' => 'your_public_key',
+    'privateKey' => 'your_private_key',
 ]);
 
-echo "FasterPay E-Invoice API Examples\n";
-echo "=================================\n\n";
+// Store component IDs for later use
+$createdTemplateId = null;
+$createdTaxId = null;
+$createdDiscountId = null;
+$createdProductId = null;
+$createdContactId = null;
+
+// ===================================================================
+// CREATE CONTACT FIRST
+// ===================================================================
 
 $contactData = [
     'email' => 'john.smith@example.com',
@@ -28,62 +34,239 @@ $contactData = [
     'favorite' => true
 ];
 
-$contactResponse = $businessGateway->contactService()->createContact($contactData);
+try {
+    $response = $businessGateway->contactService()->createContact($contactData);
+    
+    if ($response->isSuccessful()) {
+        $responseData = $response->getDecodeResponse();
+        $createdContactId = $responseData['data']['id'];
+        echo 'Contact created: ' . $createdContactId . "\n";
+    } else {
+        echo 'Error creating contact: ' . $response->getErrors()->getMessage() . "\n";
+    }
+} catch (FasterPay\Exception $e) {
+    echo 'Exception creating contact: ' . $e->getMessage() . "\n";
+}
 
-$responseData = $contactResponse->getDecodeResponse();
-$contactId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'CT-' . time();
+// ===================================================================
+// CREATE TEMPLATE COMPONENT
+// ===================================================================
+
+$templateData = [
+    'name' => 'Project Template',
+    'footer' => 'Thank you for your business!',
+    'colors' => [
+        'primary' => '#2563eb',
+        'secondary' => '#f8fafc'
+    ],
+    'localized_address' => [
+        'address_line1' => '123 Business Ave',
+        'locality' => 'San Francisco',
+        'administrative_area' => 'CA',
+        'postal_code' => '94105'
+    ],
+    'country_code' => 'US'
+    // 'logo' => new SplFileInfo('/path/to/logo.jpg')
+    // 'logo' => '/path/to/logo.jpg'
+];
 
 try {
+    $response = $businessGateway->invoiceTemplateService()->createTemplate($templateData);
+    
+    if ($response->isSuccessful()) {
+        $responseData = $response->getDecodeResponse();
+        $createdTemplateId = $responseData['data']['id'];
+        echo 'Template created: ' . $createdTemplateId . "\n";
+    } else {
+        echo 'Error creating template: ' . $response->getErrors()->getMessage() . "\n";
+    }
+} catch (FasterPay\Exception $e) {
+    echo 'Exception creating template: ' . $e->getMessage() . "\n";
+}
 
-    // Example 1: Create invoice with embedded components
-    echo "1. Creating invoice with embedded components\n";
-    echo "--------------------------------------------\n";
+// ===================================================================
+// CREATE TAX COMPONENT
+// ===================================================================
 
-    $invoiceData = [
+$taxData = [
+    'name' => 'Sales Tax',
+    'type' => 'percentage',
+    'value' => 8.5,
+    'description' => '8.5% sales tax for California'
+];
+
+try {
+    $response = $businessGateway->invoiceTaxService()->createTax($taxData);
+    
+    if ($response->isSuccessful()) {
+        $responseData = $response->getDecodeResponse();
+        $createdTaxId = $responseData['data']['id'];
+        echo 'Tax created: ' . $createdTaxId . "\n";
+    } else {
+        echo 'Error creating tax: ' . $response->getErrors()->getMessage() . "\n";
+    }
+} catch (FasterPay\Exception $e) {
+    echo 'Exception creating tax: ' . $e->getMessage() . "\n";
+}
+
+// ===================================================================
+// CREATE DISCOUNT COMPONENT
+// ===================================================================
+
+$discountData = [
+    'name' => 'Early Payment Discount',
+    'type' => 'percentage',
+    'value' => 10.0,
+    'description' => '10% discount for early payment'
+];
+
+try {
+    $response = $businessGateway->invoiceDiscountService()->createDiscount($discountData);
+    
+    if ($response->isSuccessful()) {
+        $responseData = $response->getDecodeResponse();
+        $createdDiscountId = $responseData['data']['id'];
+        echo 'Discount created: ' . $createdDiscountId . "\n";
+    } else {
+        echo 'Error creating discount: ' . $response->getErrors()->getMessage() . "\n";
+    }
+} catch (FasterPay\Exception $e) {
+    echo 'Exception creating discount: ' . $e->getMessage() . "\n";
+}
+
+// ===================================================================
+// CREATE PRODUCT COMPONENT
+// ===================================================================
+
+$productData = [
+    'name' => 'Website Development Package',
+    'sku' => 'WEB-DEV-001',
+    'type' => 'digital',
+    'description' => 'Complete website development with responsive design.',
+    'prices' => [
+        [
+            'price' => 2500.00,
+            'currency' => 'USD'
+        ]
+    ]
+    // 'image' => new SplFileInfo('/path/to/image.jpg')
+    // 'image' => '/path/to/image.jpg'
+];
+
+try {
+    $response = $businessGateway->invoiceProductService()->createProduct($productData);
+    
+    if ($response->isSuccessful()) {
+        $responseData = $response->getDecodeResponse();
+        $createdProductId = $responseData['data']['id'];
+        echo 'Product created: ' . $createdProductId . "\n";
+    } else {
+        echo 'Error creating product: ' . $response->getErrors()->getMessage() . "\n";
+    }
+} catch (FasterPay\Exception $e) {
+    echo 'Exception creating product: ' . $e->getMessage() . "\n";
+}
+
+// ===================================================================
+// CREATE INVOICE - Using Created Component IDs
+// ===================================================================
+
+$createdInvoiceId = null;
+
+if ($createdTemplateId && $createdTaxId && $createdDiscountId && $createdProductId && $createdContactId) {
+    $invoiceDataWithIds = [
+        'invoice_template_id' => $createdTemplateId,
+        'tax_id' => $createdTaxId,
+        'discount_id' => $createdDiscountId,
         'currency' => 'USD',
-        'summary' => 'Website development project invoice',
+        'summary' => 'Website development project using created components',
         'number' => 'INV-' . date('Y') . '-' . sprintf('%06d', rand(1, 999999)),
-        'contact_id' => $contactId,
+        'contact_id' => $createdContactId,
         'due_date' => date('Y-m-d', strtotime('+30 days')),
-        'template' => [
-            'name' => 'Project Template',
-            'footer' => 'Thank you for your business!',
-            'colors' => [
-                'primary' => '#2563eb',
-                'secondary' => '#f8fafc'
-            ],
-            'localized_address' => [
-                'address_line1' => '123 Business Ave',
-                'locality' => 'San Francisco',
-                'administrative_area' => 'CA',
-                'postal_code' => '94105'
-            ],
-            'country_code' => 'US'
-        ],
-        'tax' => [
-            'name' => 'Sales Tax',
-            'type' => 'flat',
-            'value' => 0.08,
-            'description' => '8% sales tax'
-        ],
-        'discount' => [
-            'name' => 'Early Payment Discount',
-            'type' => 'percentage',
-            'value' => 10.0,
-            'description' => '10% discount for early payment'
-        ],
         'items' => [
             [
                 'price' => 2500.00,
-                'quantity' => 1,
+                'product_id' => $createdProductId,
+                'tax_id' => $createdTaxId,
+                'discount_id' => $createdDiscountId,
+                'quantity' => 1
+            ]
+        ]
+    ];
+
+    try {
+        $response = $businessGateway->invoiceService()->createInvoice($invoiceDataWithIds);
+        
+        if ($response->isSuccessful()) {
+            $responseData = $response->getDecodeResponse();
+            $createdInvoiceId = $responseData['data']['id'];
+            echo 'Invoice created with component IDs: ' . $createdInvoiceId . "\n";
+        } else {
+            echo 'Error creating invoice: ' . $response->getErrors()->getMessage() . "\n";
+        }
+    } catch (FasterPay\Exception $e) {
+        echo 'Exception creating invoice: ' . $e->getMessage() . "\n";
+    }
+} else {
+    echo "Cannot create invoice - missing required components\n";
+}
+
+// ===================================================================
+// CREATE INVOICE - With Embedded Components (Alternative approach)
+// ===================================================================
+
+$embeddedInvoiceId = null;
+
+if ($createdContactId) {
+    $invoiceDataWithEmbedded = [
+        'template' => [
+            'name' => 'Embedded Template',
+            'footer' => 'Thank you for choosing our services!',
+            'colors' => [
+                'primary' => '#059669',
+                'secondary' => '#f0fdf4'
+            ],
+            'localized_address' => [
+                'address_line1' => '456 Commerce St',
+                'locality' => 'Los Angeles',
+                'administrative_area' => 'CA',
+                'postal_code' => '90210'
+            ],
+            'country_code' => 'US'
+            // 'logo' => new SplFileInfo('/path/to/embedded-logo.jpg')
+            // 'logo' => '/path/to/embedded-logo.jpg'
+        ],
+        'tax' => [
+            'name' => 'State Sales Tax',
+            'type' => 'percentage',
+            'value' => 7.25,
+            'description' => '7.25% California state sales tax'
+        ],
+        'discount' => [
+            'name' => 'First Time Customer Discount',
+            'type' => 'flat',
+            'value' => 100.00,
+            'currency' => 'USD',
+            'description' => '$100 discount for first-time customers'
+        ],
+        'currency' => 'USD',
+        'summary' => 'Website development with embedded components',
+        'number' => 'INV-EMB-' . date('Y') . '-' . sprintf('%06d', rand(1, 999999)),
+        'contact_id' => $createdContactId,
+        'due_date' => date('Y-m-d', strtotime('+45 days')),
+        'items' => [
+            [
+                'price' => 3000.00,
                 'product' => [
-                    'sku' => 'WEB-DEV-001',
+                    'sku' => 'WEB-DEV-PREMIUM',
                     'type' => 'digital',
-                    'name' => 'Website Development',
-                    'description' => 'Complete website development with responsive design',
+                    'name' => 'Premium Website Development',
+                    'description' => 'Premium website development with advanced features',
+                    // 'image' => new SplFileInfo('/path/to/product-image.jpg')
+                    // 'image' => '/path/to/product-image.jpg'
                     'prices' => [
                         [
-                            'price' => 2500.00,
+                            'price' => 3000.00,
                             'currency' => 'USD'
                         ]
                     ]
@@ -91,294 +274,182 @@ try {
                 'tax' => [
                     'name' => 'Service Tax',
                     'type' => 'percentage',
-                    'value' => 5.0
-                ]
-            ],
-            [
-                'price' => 99.99,
-                'quantity' => 12,
-                'product' => [
-                    'sku' => 'HOST-PREM-001',
-                    'type' => 'digital',
-                    'name' => 'Premium Hosting',
-                    'description' => 'Premium hosting with SSL and backups'
-                ]
+                    'value' => 5.0,
+                    'description' => '5% service tax'
+                ],
+                'discount' => [
+                    'name' => 'Bulk Service Discount',
+                    'type' => 'percentage',
+                    'value' => 5.0,
+                    'description' => '5% discount for premium services'
+                ],
+                'quantity' => 1
             ]
         ]
     ];
 
-    $response = $businessGateway->invoiceService()->createInvoice($invoiceData);
-
-    if ($response->isSuccessful()) {
-        echo "✓ Invoice created successfully!\n";
-        $data = $response->getDecodeResponse();
-        $invoiceId = $data['data']['id'];
-        echo "  Invoice ID: " . $invoiceId . "\n";
-        echo "  Invoice Number: " . $data['data']['number'] . "\n";
-        echo "  Status: " . $data['data']['status'] . "\n";
-        echo "  Currency: " . $data['data']['currency'] . "\n";
-        echo "  Items: " . count($data['data']['items']) . "\n\n";
-    } else {
-        echo "✗ Failed to create invoice\n";
-        echo "  Error: " . $response->getErrors()->getMessage() . "\n\n";
-    }
-
-    // Example 2: Create invoice using existing component IDs
-    echo "2. Creating invoice with existing component IDs\n";
-    echo "-----------------------------------------------\n";
-
-    $simpleInvoiceData = [
-        'currency' => 'USD',
-        'summary' => 'Consulting services invoice',
-        'number' => 'INV-' . date('Y') . '-' . sprintf('%06d', rand(1, 999999)),
-        'contact_id' => $contactId,
-        'invoice_template_id' => 'IT-250527-AWRO',
-        'tax_id' => 'TX-250527-2E9N',
-        'discount_id' => 'DC-250527-WZX0',
-        'items' => [
-            [
-                'product_id' => 'PD-250528-L5CC',
-                'price' => 150.00,
-                'quantity' => 10,
-                'tax_id' => 'TX-250527-2E9N'
-            ]
-        ]
-    ];
-
-    $response = $businessGateway->invoiceService()->createInvoice($simpleInvoiceData);
-
-    if ($response->isSuccessful()) {
-        echo "✓ Simple invoice created successfully!\n";
-        $data = $response->getDecodeResponse();
-        $simpleInvoiceId = $data['data']['id'];
-        echo "  Invoice ID: " . $simpleInvoiceId . "\n\n";
-    } else {
-        echo "✗ Failed to create simple invoice\n";
-        echo "  Error: " . $response->getErrors()->getMessage() . "\n\n";
-    }
-
-    // Example 3: Get invoice details
-    echo "3. Getting invoice details\n";
-    echo "--------------------------\n";
-
-    if (isset($invoiceId)) {
-        $response = $businessGateway->invoiceService()->getInvoice($invoiceId, ['include' => 'prices']);
-
+    try {
+        $response = $businessGateway->invoiceService()->createInvoice($invoiceDataWithEmbedded);
+        
         if ($response->isSuccessful()) {
-            $data = $response->getDecodeResponse();
-            $invoice = $data['data'];
-            echo "✓ Invoice details retrieved successfully!\n";
-            echo "  ID: " . $invoice['id'] . "\n";
-            echo "  Status: " . $invoice['status'] . "\n";
-            echo "  Currency: " . $invoice['currency'] . "\n";
-            echo "  Summary: " . $invoice['summary'] . "\n";
-            echo "  Due Date: " . $invoice['due_date'] . "\n";
-            echo "  Items Count: " . count($invoice['items']) . "\n\n";
+            $responseData = $response->getDecodeResponse();
+            $embeddedInvoiceId = $responseData['data']['id'];
+            echo 'Invoice created with embedded components: ' . $embeddedInvoiceId . "\n";
         } else {
-            echo "✗ Failed to get invoice details\n";
-            echo "  Error: " . $response->getErrors()->getMessage() . "\n\n";
+            echo 'Error creating embedded invoice: ' . $response->getErrors()->getMessage() . "\n";
         }
+    } catch (FasterPay\Exception $e) {
+        echo 'Exception creating embedded invoice: ' . $e->getMessage() . "\n";
     }
-
-    // Example 4: List invoices with filters
-    echo "4. Listing invoices with filters\n";
-    echo "--------------------------------\n";
-
-    $filters = [
-        'limit' => 10,
-        'offset' => 0,
-        'status' => 'draft'
-    ];
-
-    $response = $businessGateway->invoiceService()->listInvoices($filters);
-
-    if ($response->isSuccessful()) {
-        echo "✓ Invoices listed successfully!\n";
-        $data = $response->getDecodeResponse();
-        $invoices = $data['data']['data'];
-        echo "  Found " . count($invoices) . " draft invoices\n";
-
-        foreach (array_slice($invoices, 0, 3) as $invoice) {
-            echo "  - " . $invoice['id'] . " (" . $invoice['status'] . ")\n";
-        }
-        echo "\n";
-    } else {
-        echo "✗ Failed to list invoices\n";
-        echo "  Error: " . $response->getErrors()->getMessage() . "\n\n";
-    }
-
-    // Example 5: Update invoice details
-    echo "5. Updating invoice details\n";
-    echo "---------------------------\n";
-
-    if (isset($invoiceId)) {
-        $updateData = [
-            'summary' => 'Updated website development project invoice',
-            'template' => [
-                'footer' => 'Updated footer - Thank you for choosing our services!'
-            ]
-        ];
-
-        $response = $businessGateway->invoiceService()->updateInvoice($invoiceId, $updateData);
-
-        if ($response->isSuccessful()) {
-            echo "✓ Invoice updated successfully!\n";
-            echo "  Updated summary and template footer\n\n";
-        } else {
-            echo "✗ Failed to update invoice\n";
-            echo "  Error: " . $response->getErrors()->getMessage() . "\n\n";
-        }
-    }
-
-    // Example 6: Update invoice status
-    echo "6. Updating invoice status\n";
-    echo "--------------------------\n";
-
-    if (isset($invoiceId)) {
-        $statusParams = [
-            'status' => 'sent',
-            'notes' => 'Invoice sent to customer via email'
-        ];
-
-        $response = $businessGateway->invoiceService()->updateInvoiceStatus($invoiceId, $statusParams);
-
-        if ($response->isSuccessful()) {
-            echo "✓ Invoice status updated successfully!\n";
-            echo "  New status: " . $statusParams['status'] . "\n";
-            echo "  Notes: " . $statusParams['notes'] . "\n\n";
-        } else {
-            echo "✗ Failed to update invoice status\n";
-            echo "  Error: " . $response->getErrors()->getMessage() . "\n\n";
-        }
-    }
-
-    // Example 7: Preview invoice HTML
-    echo "7. Previewing invoice HTML\n";
-    echo "--------------------------\n";
-
-    if (isset($invoiceId)) {
-        $response = $businessGateway->invoiceService()->previewInvoice($invoiceId);
-
-        if ($response->isSuccessful()) {
-            echo "✓ Invoice preview generated successfully!\n";
-            $htmlContent = $response->getRaw();
-            echo "  HTML content length: " . strlen($htmlContent) . " characters\n\n";
-        } else {
-            echo "✗ Failed to generate invoice preview\n";
-            echo "  Error: " . $response->getErrors()->getMessage() . "\n\n";
-        }
-    }
-
-    // Example 8: Download invoice PDF
-    echo "8. Downloading invoice PDF\n";
-    echo "--------------------------\n";
-
-    if (isset($invoiceId)) {
-        $response = $businessGateway->invoiceService()->downloadInvoicePdf($invoiceId);
-
-        if ($response->isSuccessful()) {
-            echo "✓ Invoice PDF downloaded successfully!\n";
-            $pdfContent = $response->getRaw();
-            echo "  PDF size: " . strlen($pdfContent) . " bytes\n";
-
-            // Optionally save to file
-            // file_put_contents('invoice_' . $invoiceId . '.pdf', $pdfContent);
-            echo "\n";
-        } else {
-            echo "✗ Failed to download invoice PDF\n";
-            echo "  Error: " . $response->getErrors()->getMessage() . "\n\n";
-        }
-    }
-
-    // Example 9: Send invoice to customer
-    echo "9. Sending invoice to customer\n";
-    echo "------------------------------\n";
-
-    if (isset($invoiceId)) {
-        // Send test email first
-        $response = $businessGateway->invoiceService()->sendInvoice($invoiceId, ['test' => true]);
-
-        if ($response->isSuccessful()) {
-            echo "✓ Test invoice email sent successfully!\n";
-
-            // Send actual invoice
-            $response = $businessGateway->invoiceService()->sendInvoice($invoiceId);
-
-            if ($response->isSuccessful()) {
-                echo "✓ Invoice sent to customer successfully!\n\n";
-            } else {
-                echo "✗ Failed to send invoice to customer\n";
-                echo "  Error: " . $response->getErrors()->getMessage() . "\n\n";
-            }
-        } else {
-            echo "✗ Failed to send test invoice\n";
-            echo "  Error: " . $response->getErrors()->getMessage() . "\n\n";
-        }
-    }
-
-    // Example 10: Delete operations (cleanup)
-    echo "10. Cleanup operations\n";
-    echo "----------------------\n";
-
-    // Delete test invoice
-    $testInvoiceId = 'FPBIV-DELETE-' . time();
-    $response = $businessGateway->invoiceService()->deleteInvoice($testInvoiceId);
-
-    if ($response->isSuccessful()) {
-        echo "✓ Test invoice deleted successfully\n";
-    } else {
-        echo "✓ Expected error for non-existent invoice (cleanup test)\n";
-    }
-
-    echo "\n";
-
-} catch (FasterPay\Exception $e) {
-    echo "✗ An error occurred: " . $e->getMessage() . "\n";
-    echo "  Stack trace:\n" . $e->getTraceAsString() . "\n";
 }
 
-echo "\nE-Invoice API Examples Completed!\n";
-echo "==================================\n\n";
+// ===================================================================
+// UPDATE INVOICE - Use Created Invoice ID
+// ===================================================================
 
-echo "Key Features Demonstrated:\n";
-echo "- Create invoices with embedded components (templates, products, taxes, discounts)\n";
-echo "- Create invoices using existing component IDs\n";
-echo "- Retrieve and list invoices with filtering\n";
-echo "- Update invoice details and status\n";
-echo "- Preview invoices and download PDFs\n";
-echo "- Send invoices to customers\n";
-echo "- Manage templates, products, taxes, and discounts\n";
-echo "- Handle webhook notifications\n";
-echo "- Comprehensive error handling\n";
-echo "- File upload support for multipart requests\n\n";
+if ($createdInvoiceId) {
+    $updateData = [
+        'summary' => 'Updated website development project',
+        'items' => [
+            [
+                'price' => 2750.00, // Updated price
+                'product_id' => $createdProductId,
+                'tax_id' => $createdTaxId,
+                'discount_id' => $createdDiscountId,
+                'quantity' => 1
+            ]
+        ]
+    ];
 
-echo "Use Cases:\n";
-echo "• Automated billing and invoicing systems\n";
-echo "• Recurring subscription billing\n";
-echo "• Professional invoice generation\n";
-echo "• Payment tracking and reminders\n";
-echo "• Financial reporting and analytics\n";
-echo "• Multi-currency invoicing\n";
-echo "• Tax compliance and reporting\n";
-echo "• Customer payment portal integration\n";
-echo "• E-commerce order invoicing\n";
-echo "• Service-based business billing\n\n";
+    try {
+        $response = $businessGateway->invoiceService()->updateInvoice($createdInvoiceId, $updateData);
+        
+        if ($response->isSuccessful()) {
+            echo 'Invoice updated successfully: ' . $createdInvoiceId . "\n";
+        } else {
+            echo 'Error updating invoice: ' . $response->getErrors()->getMessage() . "\n";
+        }
+    } catch (FasterPay\Exception $e) {
+        echo 'Exception updating invoice: ' . $e->getMessage() . "\n";
+    }
+}
 
-echo "Best Practices:\n";
-echo "- Validate only route parameters (IDs) - API handles all other parameter validation\n";
-echo "- Use BusinessGateway service methods for consistent architecture\n";
-echo "- Handle responses using isSuccessful(), getDecodeResponse(), and getErrors()\n";
-echo "- Use appropriate HTTP methods via HttpClient (post, get, put, delete)\n";
-echo "- Implement proper error handling and logging\n";
-echo "- Use webhook handlers for real-time status updates\n";
-echo "- Follow the documented invoice status lifecycle\n";
-echo "- Store component IDs for reuse and reference\n";
-echo "- Use test mode during development and integration\n";
-echo "- Implement retry logic for transient failures\n\n";
+// ===================================================================
+// LIST INVOICES
+// ===================================================================
 
-echo "Configuration Notes:\n";
-echo "- Set publicKey and privateKey to your actual FasterPay keys\n";
-echo "- Set isTest to 0 for production environment\n";
-echo "- Ensure contact_id references exist before creating invoices\n";
-echo "- Configure webhook URLs in your FasterPay dashboard\n";
-echo "- Test all operations in sandbox before going live\n";
+$filters = [
+    'limit' => 10,
+    'offset' => 0,
+    'status' => 'draft',
+    'include' => 'items,items.product.prices'
+];
+
+try {
+    $response = $businessGateway->invoiceService()->listInvoices($filters);
+    
+    if ($response->isSuccessful()) {
+        $responseData = $response->getDecodeResponse();
+        $invoices = $responseData['data']['data'];
+        echo 'Found ' . count($invoices) . ' draft invoices' . "\n";
+        
+        foreach ($invoices as $invoice) {
+            echo '  - Invoice ID: ' . $invoice['id'] . ' - Status: ' . $invoice['status'] . "\n";
+        }
+    } else {
+        echo 'Error listing invoices: ' . $response->getErrors()->getMessage() . "\n";
+    }
+} catch (FasterPay\Exception $e) {
+    echo 'Exception listing invoices: ' . $e->getMessage() . "\n";
+}
+
+// ===================================================================
+// GET INVOICE DETAILS - Use Created Invoice ID
+// ===================================================================
+
+if ($createdInvoiceId) {
+    try {
+        $response = $businessGateway->invoiceService()->getInvoice($createdInvoiceId);
+        
+        if ($response->isSuccessful()) {
+            $responseData = $response->getDecodeResponse();
+            $invoice = $responseData['data'];
+            echo 'Retrieved invoice details:' . "\n";
+            echo '  ID: ' . $invoice['id'] . "\n";
+            echo '  Status: ' . $invoice['status'] . "\n";
+            echo '  Currency: ' . $invoice['currency'] . "\n";
+            echo '  Summary: ' . $invoice['summary'] . "\n";
+        } else {
+            echo 'Error getting invoice details: ' . $response->getErrors()->getMessage() . "\n";
+        }
+    } catch (FasterPay\Exception $e) {
+        echo 'Exception getting invoice details: ' . $e->getMessage() . "\n";
+    }
+}
+
+// ===================================================================
+// UPDATE INVOICE STATUS - Use Created Invoice ID
+// ===================================================================
+
+if ($createdInvoiceId) {
+    $statusData = [
+        'status' => 'sent'
+    ];
+
+    try {
+        $response = $businessGateway->invoiceService()->updateInvoiceStatus($createdInvoiceId, $statusData);
+        
+        if ($response->isSuccessful()) {
+            echo 'Invoice status updated to: ' . $statusData['status'] . ' for invoice: ' . $createdInvoiceId . "\n";
+        } else {
+            echo 'Error updating invoice status: ' . $response->getErrors()->getMessage() . "\n";
+        }
+    } catch (FasterPay\Exception $e) {
+        echo 'Exception updating invoice status: ' . $e->getMessage() . "\n";
+    }
+}
+
+// ===================================================================
+// SEND INVOICE - Use Embedded Invoice ID
+// ===================================================================
+
+if ($embeddedInvoiceId) {
+    $sendParams = [
+        'email' => 'customer@example.com'
+    ];
+
+    try {
+        $response = $businessGateway->invoiceService()->sendInvoice($embeddedInvoiceId, $sendParams);
+        
+        if ($response->isSuccessful()) {
+            echo 'Invoice sent successfully to: ' . $sendParams['email'] . ' for invoice: ' . $embeddedInvoiceId . "\n";
+        } else {
+            echo 'Error sending invoice: ' . $response->getErrors()->getMessage() . "\n";
+        }
+    } catch (FasterPay\Exception $e) {
+        echo 'Exception sending invoice: ' . $e->getMessage() . "\n";
+    }
+}
+
+// ===================================================================
+// DOWNLOAD INVOICE PDF - Use Created Invoice ID
+// ===================================================================
+
+if ($createdInvoiceId) {
+    try {
+        $response = $businessGateway->invoiceService()->downloadInvoicePdf($createdInvoiceId);
+        
+        if ($response->isSuccessful()) {
+            $pdfContent = $response->getRaw();
+            echo 'PDF downloaded successfully for: ' . $createdInvoiceId . "\n";
+            echo 'PDF size: ' . strlen($pdfContent) . ' bytes' . "\n";
+            
+            // Save to file if needed
+            // file_put_contents('invoice_' . $createdInvoiceId . '.pdf', $pdfContent);
+        } else {
+            echo 'Error downloading PDF: ' . $response->getErrors()->getMessage() . "\n";
+        }
+    } catch (FasterPay\Exception $e) {
+        echo 'Exception downloading PDF: ' . $e->getMessage() . "\n";
+    }
+}
