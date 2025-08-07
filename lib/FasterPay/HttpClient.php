@@ -94,6 +94,12 @@ class HttpClient
             }
         }
 
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+
+        $response = curl_exec($ch);
+        $info = curl_getinfo($ch);
+        curl_close($ch);
+
         return [
             'response' => $response,
             'httpCode' => $info['http_code']
