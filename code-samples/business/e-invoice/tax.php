@@ -10,8 +10,8 @@ $businessGateway = new FasterPay\BusinessGateway([
 echo "FasterPay Invoice Tax API Examples\n";
 echo "===================================\n\n";
 
-// Example 1: Create a basic percentage tax
-echo "1. Creating a basic percentage tax\n";
+// Example 1: Create a tax
+echo "1. Creating a tax\n";
 echo "----------------------------------\n";
 
 $taxData = [
@@ -42,71 +42,8 @@ try {
 
 echo "\n";
 
-// Example 2: Create a flat fee tax
-echo "2. Creating a flat fee tax\n";
-echo "---------------------------\n";
-
-$flatTaxData = [
-    'name' => 'Processing Fee',
-    'type' => 'flat',
-    'value' => 2.50,
-    'currency' => 'USD',
-    'description' => '$2.50 flat processing fee per transaction'
-];
-
-try {
-    $flatTaxResponse = $businessGateway->invoiceTaxService()->createTax($flatTaxData);
-
-    if ($flatTaxResponse->isSuccessful()) {
-        echo "Flat tax created successfully\n";
-        $responseData = $flatTaxResponse->getDecodeResponse();
-        $flatTaxId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'TX-FLAT-' . time();
-        echo "  Tax ID: " . $flatTaxId . "\n";
-        echo "  Name: " . $flatTaxData['name'] . "\n";
-        echo "  Type: " . $flatTaxData['type'] . "\n";
-        echo "  Value: $" . $flatTaxData['value'] . " " . $flatTaxData['currency'] . "\n";
-    } else {
-        echo "Error: " . $flatTaxResponse->getErrors()->getMessage() . "\n";
-    }
-} catch (FasterPay\Exception $e) {
-    echo "Exception: " . $e->getMessage() . "\n";
-}
-
-echo "\n";
-
-// Example 3: Create VAT tax
-echo "3. Creating VAT tax\n";
-echo "-------------------\n";
-
-$vatTaxData = [
-    'name' => 'VAT (UK)',
-    'type' => 'percentage',
-    'value' => 20.0,
-    'description' => '20% VAT for United Kingdom transactions'
-];
-
-try {
-    $vatResponse = $businessGateway->invoiceTaxService()->createTax($vatTaxData);
-
-    if ($vatResponse->isSuccessful()) {
-        echo "VAT tax created successfully\n";
-        $responseData = $vatResponse->getDecodeResponse();
-        $vatTaxId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'TX-VAT-' . time();
-        echo "  Tax ID: " . $vatTaxId . "\n";
-        echo "  Name: " . $vatTaxData['name'] . "\n";
-        echo "  Rate: " . $vatTaxData['value'] . "%\n";
-        echo "  Region: United Kingdom\n";
-    } else {
-        echo "Error: " . $vatResponse->getErrors()->getMessage() . "\n";
-    }
-} catch (FasterPay\Exception $e) {
-    echo "Exception: " . $e->getMessage() . "\n";
-}
-
-echo "\n";
-
-// Example 4: Get tax details
-echo "4. Getting tax details\n";
+// Example 2: Get tax details
+echo "2. Getting tax details\n";
 echo "----------------------\n";
 
 $taxId = isset($taxId) ? $taxId : 'TX-' . time();
@@ -134,8 +71,8 @@ try {
 
 echo "\n";
 
-// Example 5: Update tax
-echo "5. Updating tax\n";
+// Example 3: Update tax
+echo "3. Updating tax\n";
 echo "---------------\n";
 
 $updateData = [
@@ -160,8 +97,8 @@ try {
 
 echo "\n";
 
-// Example 6: List all taxes
-echo "6. Listing all taxes\n";
+// Example 4: List all taxes
+echo "4. Listing all taxes\n";
 echo "--------------------\n";
 
 $listFilters = [
@@ -194,8 +131,8 @@ try {
 
 echo "\n";
 
-// Example 7: Create multiple regional taxes
-echo "7. Creating multiple regional taxes\n";
+// Example 5: Create multiple regional taxes
+echo "5. Creating multiple regional taxes\n";
 echo "-----------------------------------\n";
 
 $regionalTaxes = [
@@ -237,8 +174,8 @@ foreach ($regionalTaxes as $taxData) {
 
 echo "\n";
 
-// Example 8: Delete tax
-echo "8. Deleting tax\n";
+// Example 6: Delete tax
+echo "6. Deleting tax\n";
 echo "----------------\n";
 
 $deleteTaxId = isset($vatTaxId) ? $vatTaxId : 'TX-DELETE-' . time();
@@ -257,26 +194,3 @@ try {
 }
 
 echo "\nInvoice Tax API examples completed!\n";
-echo "Use cases:\n";
-echo "• Sales tax calculation and management\n";
-echo "• VAT handling for international transactions\n";
-echo "• Fixed processing fees\n";
-echo "• State and local tax compliance\n";
-echo "• Custom tax rates per region\n";
-echo "• Tax exemption handling\n";
-echo "• Multi-jurisdiction tax support\n";
-echo "• Automated tax calculation in invoices\n";
-echo "• Flat fee vs percentage tax options\n";
-echo "• Regional tax configuration\n";
-
-echo "\nTax Types:\n";
-echo "• percentage: Tax calculated as percentage of amount\n";
-echo "• flat: Fixed tax amount regardless of invoice total\n";
-
-echo "\nValidation Notes:\n";
-echo "• Only ID field validation implemented (as requested)\n";
-echo "• API handles all parameter validation server-side\n";
-echo "• Tax values for percentage type should be decimal (8.5 for 8.5%)\n";
-echo "• Tax values for flat type should be monetary amount\n";
-echo "• Currency required for flat type taxes\n";
-echo "• Tax names limited to 191 characters\n";

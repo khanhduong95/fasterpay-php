@@ -26,7 +26,7 @@ try {
     $discountResponse = $businessGateway->invoiceDiscountService()->createDiscount($flatDiscountData);
 
     if ($discountResponse->isSuccessful()) {
-        echo "✓ Flat discount created successfully\n";
+        echo "Flat discount created successfully\n";
         $responseData = $discountResponse->getDecodeResponse();
         $discountId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'DC-' . time();
         echo "  Discount ID: " . $discountId . "\n";
@@ -35,10 +35,10 @@ try {
         echo "  Value: $" . number_format($flatDiscountData['value'], 2) . " " . $flatDiscountData['currency'] . "\n";
         echo "  Description: " . $flatDiscountData['description'] . "\n";
     } else {
-        echo "✗ Error: " . $discountResponse->getErrors()->getMessage() . "\n";
+        echo "Error: " . $discountResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
-    echo "✗ Exception: " . $e->getMessage() . "\n";
+    echo "Exception: " . $e->getMessage() . "\n";
 }
 
 echo "\n";
@@ -58,7 +58,7 @@ try {
     $volumeResponse = $businessGateway->invoiceDiscountService()->createDiscount($percentageDiscountData);
 
     if ($volumeResponse->isSuccessful()) {
-        echo "✓ Percentage discount created successfully\n";
+        echo "Percentage discount created successfully\n";
         $responseData = $volumeResponse->getDecodeResponse();
         $volumeDiscountId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'DC-VOLUME-' . time();
         echo "  Discount ID: " . $volumeDiscountId . "\n";
@@ -67,10 +67,10 @@ try {
         echo "  Value: " . $percentageDiscountData['value'] . "%\n";
         echo "  Description: " . $percentageDiscountData['description'] . "\n";
     } else {
-        echo "✗ Error: " . $volumeResponse->getErrors()->getMessage() . "\n";
+        echo "Error: " . $volumeResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
-    echo "✗ Exception: " . $e->getMessage() . "\n";
+    echo "Exception: " . $e->getMessage() . "\n";
 }
 
 echo "\n";
@@ -90,7 +90,7 @@ try {
     $loyaltyResponse = $businessGateway->invoiceDiscountService()->createDiscount($loyaltyDiscountData);
 
     if ($loyaltyResponse->isSuccessful()) {
-        echo "✓ Loyalty discount created successfully\n";
+        echo "Loyalty discount created successfully\n";
         $responseData = $loyaltyResponse->getDecodeResponse();
         $loyaltyDiscountId = isset($responseData['data']['id']) ? $responseData['data']['id'] : 'DC-LOYALTY-' . time();
         echo "  Discount ID: " . $loyaltyDiscountId . "\n";
@@ -99,10 +99,10 @@ try {
         echo "  Value: " . $loyaltyDiscountData['value'] . "%\n";
         echo "  Description: " . $loyaltyDiscountData['description'] . "\n";
     } else {
-        echo "✗ Error: " . $loyaltyResponse->getErrors()->getMessage() . "\n";
+        echo "Error: " . $loyaltyResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
-    echo "✗ Exception: " . $e->getMessage() . "\n";
+    echo "Exception: " . $e->getMessage() . "\n";
 }
 
 echo "\n";
@@ -117,7 +117,7 @@ try {
     $getDiscountResponse = $businessGateway->invoiceDiscountService()->getDiscount($testDiscountId);
 
     if ($getDiscountResponse->isSuccessful()) {
-        echo "✓ Discount details retrieved successfully\n";
+        echo "Discount details retrieved successfully\n";
         $discountData = $getDiscountResponse->getDecodeResponse();
         if (isset($discountData['data'])) {
             $discount = $discountData['data'];
@@ -131,10 +131,10 @@ try {
             echo "  Description: " . (isset($discount['description']) ? $discount['description'] : 'N/A') . "\n";
         }
     } else {
-        echo "✗ Error: " . $getDiscountResponse->getErrors()->getMessage() . "\n";
+        echo "Error: " . $getDiscountResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
-    echo "✗ Exception: " . $e->getMessage() . "\n";
+    echo "Exception: " . $e->getMessage() . "\n";
 }
 
 echo "\n";
@@ -153,16 +153,16 @@ try {
     $updateResponse = $businessGateway->invoiceDiscountService()->updateDiscount($testDiscountId, $updateDiscountData);
 
     if ($updateResponse->isSuccessful()) {
-        echo "✓ Discount updated successfully\n";
+        echo "Discount updated successfully\n";
         echo "  Discount ID: " . $testDiscountId . "\n";
         echo "  Updated Name: " . $updateDiscountData['name'] . "\n";
         echo "  Updated Value: $" . number_format($updateDiscountData['value'], 2) . "\n";
         echo "  Updated Description: " . $updateDiscountData['description'] . "\n";
     } else {
-        echo "✗ Error: " . $updateResponse->getErrors()->getMessage() . "\n";
+        echo "Error: " . $updateResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
-    echo "✗ Exception: " . $e->getMessage() . "\n";
+    echo "Exception: " . $e->getMessage() . "\n";
 }
 
 echo "\n";
@@ -180,7 +180,7 @@ try {
     $listResponse = $businessGateway->invoiceDiscountService()->listDiscounts($filters);
 
     if ($listResponse->isSuccessful()) {
-        echo "✓ Discount list retrieved successfully\n";
+        echo "Discount list retrieved successfully\n";
         $listData = $listResponse->getDecodeResponse();
         if (isset($listData['data']['data']) && is_array($listData['data']['data'])) {
             echo "  Found " . count($listData['data']['data']) . " discounts:\n";
@@ -194,10 +194,10 @@ try {
             }
         }
     } else {
-        echo "✗ Error: " . $listResponse->getErrors()->getMessage() . "\n";
+        echo "Error: " . $listResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
-    echo "✗ Exception: " . $e->getMessage() . "\n";
+    echo "Exception: " . $e->getMessage() . "\n";
 }
 
 echo "\n";
@@ -212,24 +212,15 @@ try {
     $deleteResponse = $businessGateway->invoiceDiscountService()->deleteDiscount($deleteTestDiscountId);
 
     if ($deleteResponse->isSuccessful()) {
-        echo "✓ Discount deleted successfully\n";
+        echo "Discount deleted successfully\n";
         echo "  Deleted Discount ID: " . $deleteTestDiscountId . "\n";
     } else {
-        echo "✗ Error: " . $deleteResponse->getErrors()->getMessage() . "\n";
+        echo "Error: " . $deleteResponse->getErrors()->getMessage() . "\n";
     }
 } catch (FasterPay\Exception $e) {
-    echo "✗ Exception: " . $e->getMessage() . "\n";
+    echo "Exception: " . $e->getMessage() . "\n";
 }
 
 echo "\n";
 
 echo "\nInvoice Discount API examples completed!\n";
-echo "Use cases:\n";
-echo "• Early payment incentives\n";
-echo "• Volume purchase discounts\n";
-echo "• Loyalty customer rewards\n";
-echo "• Seasonal promotional offers\n";
-echo "• First-time customer discounts\n";
-echo "• Bulk order price reductions\n";
-echo "• Partner and affiliate discounts\n";
-echo "• Promotional campaign management\n";
