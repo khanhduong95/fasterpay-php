@@ -33,43 +33,26 @@ class HttpClient
         return $this->call($endpoint, $params, 'GET', $headers);
     }
 
-    /**
-     * Send POST request with automatic multipart detection
-     *
-     * @param string $endpoint API endpoint
-     * @param array $params Form parameters
-     * @param array $headers Additional headers
-     * @return array
-     */
     public function post($endpoint, array $params = [], array $headers = [])
     {
-        // Auto-detect files and use multipart if needed
-        $files = $this->extractFiles($params);
+        $testParams = $params;
+        $files = $this->extractFiles($testParams);
         
         if (!empty($files)) {
-            return $this->postMultipart($endpoint, $params, $files, $headers);
+            return $this->postMultipart($endpoint, $params, $headers);
         }
         
         return $this->call($endpoint, $params, 'POST', $headers);
     }
 
-    /**
-     * Send PUT request with automatic multipart detection
-     * Note: If files detected, uses POST with _method=PUT for multipart compatibility
-     *
-     * @param string $endpoint API endpoint
-     * @param array $params Form parameters
-     * @param array $headers Additional headers
-     * @return array
-     */
     public function put($endpoint, array $params = [], array $headers = [])
     {
-        // Auto-detect files and use multipart if needed
-        $files = $this->extractFiles($params);
+        $testParams = $params;
+        $files = $this->extractFiles($testParams);
         
         if (!empty($files)) {
             $params['_method'] = 'PUT';
-            return $this->postMultipart($endpoint, $params, $files, $headers);
+            return $this->postMultipart($endpoint, $params, $headers);
         }
         
         return $this->call($endpoint, $params, 'PUT', $headers);
@@ -80,22 +63,12 @@ class HttpClient
         return $this->call($endpoint, $params, 'DELETE', $headers);
     }
 
-    /**
-     * Send multipart POST request with file uploads
-     *
-     * @param string $endpoint API endpoint
-     * @param array $params Form parameters
-     * @param array $files Array of files where key is field name and value is file path
-     * @param array $headers Additional headers
-     * @return array
-     */
-    public function postMultipart($endpoint, array $params = [], array $files = [], array $headers = [])
+    public function postMultipart($endpoint, array $params = [], array $headers = [])
     {
         $ch = $this->init();
 
         $header = array_merge($this->header, $headers);
         
-        // Remove Content-Type header to let cURL set it automatically for multipart
         $header = array_filter($header, function($h) {
             return stripos($h, 'Content-Type:') !== 0;
         });
@@ -104,39 +77,22 @@ class HttpClient
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_URL, $endpoint);
 
-        // Prepare multipart data
+        $files = $this->extractFiles($params);
         $postData = [];
         
-        // Add regular form fields
-        foreach ($params as $key => $value) {
-            if (is_array($value)) {
-                // Handle nested arrays (like colors, localized_address)
-                foreach ($value as $subKey => $subValue) {
-                    $postData[$key . '[' . $subKey . ']'] = $subValue;
-                }
-            } else {
-                $postData[$key] = $value;
-            }
-        }
+        $this->buildPostData($params, $postData, '');
 
-        // Add files
-        foreach ($files as $fieldName => $filePath) {
-            if (file_exists($filePath)) {
+        foreach ($files as $fieldName => $fileValue) {
+            if (is_object($fileValue)) {
+                $postData[$fieldName] = $fileValue;
+            } elseif (is_string($fileValue) && file_exists($fileValue)) {
                 if (class_exists('CURLFile')) {
-                    // PHP 5.5+
-                    $postData[$fieldName] = new \CURLFile($filePath);
+                    $postData[$fieldName] = new \CURLFile($fileValue);
                 } else {
-                    // PHP 5.4 compatibility
-                    $postData[$fieldName] = '@' . $filePath;
+                    $postData[$fieldName] = '@' . $fileValue;
                 }
             }
         }
-
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
-
-        $response = curl_exec($ch);
-        $info = curl_getinfo($ch);
-        curl_close($ch);
 
         return [
             'response' => $response,
@@ -144,27 +100,70 @@ class HttpClient
         ];
     }
 
-    /**
-     * Extract file fields from params for multipart upload
-     *
-     * @param array $params Reference to params array
-     * @return array Files array for multipart upload
-     */
+    private function buildPostData(array $data, array &$postData, $prefix)
+    {
+        foreach ($data as $key => $value) {
+            $currentKey = $prefix ? $prefix . '[' . $key . ']' : $key;
+            
+            if (is_array($value)) {
+                $this->buildPostData($value, $postData, $currentKey);
+            } else {
+                $postData[$currentKey] = $value;
+            }
+        }
+    }
+
+    private function buildPostData(array $data, array &$postData, $prefix)
+    {
+        foreach ($data as $key => $value) {
+            $currentKey = $prefix ? $prefix . '[' . $key . ']' : $key;
+            
+            if (is_array($value)) {
+                $this->buildPostData($value, $postData, $currentKey);
+            } else {
+                $postData[$currentKey] = $value;
+            }
+        }
+    }
+
     private function extractFiles(array &$params)
     {
         $files = [];
-        
-        foreach ($params as $field => $value) {
-            if (is_string($value) && !empty($value)) {
-                // Check if it looks like a file path (not a URL and file exists)
-                if (!filter_var($value, FILTER_VALIDATE_URL) && file_exists($value)) {
-                    $files[$field] = $value;
-                    unset($params[$field]); // Remove from params as it will be sent as file
-                }
+        $this->extractFilesRecursive($params, $files, '');
+        return $files;
+    }
+
+    private function extractFilesRecursive(array &$params, array &$files, $prefix)
+    {
+        foreach ($params as $key => $value) {
+            $currentKey = $prefix ? $prefix . '[' . $key . ']' : $key;
+            
+            if (is_array($value)) {
+                $this->extractFilesRecursive($params[$key], $files, $currentKey);
+            } elseif ($this->isFileObject($value)) {
+                $files[$currentKey] = $value;
+                unset($params[$key]);
             }
         }
-        
-        return $files;
+    }
+
+    private function isFileObject($value)
+    {
+        if (is_object($value)) {
+            return $value instanceof \CURLFile || 
+                   (class_exists('SplFileInfo') && $value instanceof \SplFileInfo) ||
+                   (class_exists('finfo') && method_exists($value, 'getPathname')) ||
+                   method_exists($value, '__toString');
+        }
+
+        if (is_string($value) && !empty($value)) {
+            if (filter_var($value, FILTER_VALIDATE_URL)) {
+                return false;
+            }
+            return file_exists($value);
+        }
+
+        return false;
     }
 
     private function call($endpoint, array $params = [], $method, array $headers = [])
