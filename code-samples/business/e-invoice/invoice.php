@@ -1,7 +1,7 @@
 <?php
 
 /**
- * FasterPay E-Invoice API - Complete Component Creation & Invoice Examples
+ * FasterPay Invoice API - Complete Component Creation & Invoice Examples
  * Creates invoice components first to get their IDs, then uses those IDs for invoices
  */
 
@@ -36,7 +36,7 @@ $contactData = [
 
 try {
     $response = $businessGateway->contactService()->createContact($contactData);
-    
+
     if ($response->isSuccessful()) {
         $responseData = $response->getDecodeResponse();
         $createdContactId = $responseData['data']['id'];
@@ -72,7 +72,7 @@ $templateData = [
 
 try {
     $response = $businessGateway->invoiceTemplateService()->createTemplate($templateData);
-    
+
     if ($response->isSuccessful()) {
         $responseData = $response->getDecodeResponse();
         $createdTemplateId = $responseData['data']['id'];
@@ -97,7 +97,7 @@ $taxData = [
 
 try {
     $response = $businessGateway->invoiceTaxService()->createTax($taxData);
-    
+
     if ($response->isSuccessful()) {
         $responseData = $response->getDecodeResponse();
         $createdTaxId = $responseData['data']['id'];
@@ -122,7 +122,7 @@ $discountData = [
 
 try {
     $response = $businessGateway->invoiceDiscountService()->createDiscount($discountData);
-    
+
     if ($response->isSuccessful()) {
         $responseData = $response->getDecodeResponse();
         $createdDiscountId = $responseData['data']['id'];
@@ -155,7 +155,7 @@ $productData = [
 
 try {
     $response = $businessGateway->invoiceProductService()->createProduct($productData);
-    
+
     if ($response->isSuccessful()) {
         $responseData = $response->getDecodeResponse();
         $createdProductId = $responseData['data']['id'];
@@ -170,6 +170,9 @@ try {
 // ===================================================================
 // CREATE INVOICE - Using Created Component IDs
 // ===================================================================
+
+echo "1. Creating invoice (non-embedded)\n";
+echo "-------------------\n";
 
 $createdInvoiceId = null;
 
@@ -196,7 +199,7 @@ if ($createdTemplateId && $createdTaxId && $createdDiscountId && $createdProduct
 
     try {
         $response = $businessGateway->invoiceService()->createInvoice($invoiceDataWithIds);
-        
+
         if ($response->isSuccessful()) {
             $responseData = $response->getDecodeResponse();
             $createdInvoiceId = $responseData['data']['id'];
@@ -214,6 +217,9 @@ if ($createdTemplateId && $createdTaxId && $createdDiscountId && $createdProduct
 // ===================================================================
 // CREATE INVOICE - With Embedded Components (Alternative approach)
 // ===================================================================
+
+echo "2. Creating invoice (embedded)\n";
+echo "-------------------\n";
 
 $embeddedInvoiceId = null;
 
@@ -290,7 +296,7 @@ if ($createdContactId) {
 
     try {
         $response = $businessGateway->invoiceService()->createInvoice($invoiceDataWithEmbedded);
-        
+
         if ($response->isSuccessful()) {
             $responseData = $response->getDecodeResponse();
             $embeddedInvoiceId = $responseData['data']['id'];
@@ -306,6 +312,9 @@ if ($createdContactId) {
 // ===================================================================
 // UPDATE INVOICE - Use Created Invoice ID
 // ===================================================================
+
+echo "3. Updating invoice\n";
+echo "-------------------\n";
 
 if ($createdInvoiceId) {
     $updateData = [
@@ -323,7 +332,7 @@ if ($createdInvoiceId) {
 
     try {
         $response = $businessGateway->invoiceService()->updateInvoice($createdInvoiceId, $updateData);
-        
+
         if ($response->isSuccessful()) {
             echo 'Invoice updated successfully: ' . $createdInvoiceId . "\n";
         } else {
@@ -338,6 +347,9 @@ if ($createdInvoiceId) {
 // LIST INVOICES
 // ===================================================================
 
+echo "4. Listing invoices\n";
+echo "-------------------\n";
+
 $filters = [
     'limit' => 10,
     'offset' => 0,
@@ -347,12 +359,12 @@ $filters = [
 
 try {
     $response = $businessGateway->invoiceService()->listInvoices($filters);
-    
+
     if ($response->isSuccessful()) {
         $responseData = $response->getDecodeResponse();
         $invoices = $responseData['data']['data'];
         echo 'Found ' . count($invoices) . ' draft invoices' . "\n";
-        
+
         foreach ($invoices as $invoice) {
             echo '  - Invoice ID: ' . $invoice['id'] . ' - Status: ' . $invoice['status'] . "\n";
         }
@@ -367,10 +379,13 @@ try {
 // GET INVOICE DETAILS - Use Created Invoice ID
 // ===================================================================
 
+echo "5. Getting invoice details\n";
+echo "-------------------\n";
+
 if ($createdInvoiceId) {
     try {
         $response = $businessGateway->invoiceService()->getInvoice($createdInvoiceId);
-        
+
         if ($response->isSuccessful()) {
             $responseData = $response->getDecodeResponse();
             $invoice = $responseData['data'];
@@ -388,30 +403,11 @@ if ($createdInvoiceId) {
 }
 
 // ===================================================================
-// UPDATE INVOICE STATUS - Use Created Invoice ID
-// ===================================================================
-
-if ($createdInvoiceId) {
-    $statusData = [
-        'status' => 'sent'
-    ];
-
-    try {
-        $response = $businessGateway->invoiceService()->updateInvoiceStatus($createdInvoiceId, $statusData);
-        
-        if ($response->isSuccessful()) {
-            echo 'Invoice status updated to: ' . $statusData['status'] . ' for invoice: ' . $createdInvoiceId . "\n";
-        } else {
-            echo 'Error updating invoice status: ' . $response->getErrors()->getMessage() . "\n";
-        }
-    } catch (FasterPay\Exception $e) {
-        echo 'Exception updating invoice status: ' . $e->getMessage() . "\n";
-    }
-}
-
-// ===================================================================
 // SEND INVOICE - Use Embedded Invoice ID
 // ===================================================================
+
+echo "6. Sending invoice\n";
+echo "-------------------\n";
 
 if ($embeddedInvoiceId) {
     $sendParams = [
@@ -420,7 +416,7 @@ if ($embeddedInvoiceId) {
 
     try {
         $response = $businessGateway->invoiceService()->sendInvoice($embeddedInvoiceId, $sendParams);
-        
+
         if ($response->isSuccessful()) {
             echo 'Invoice sent successfully to: ' . $sendParams['email'] . ' for invoice: ' . $embeddedInvoiceId . "\n";
         } else {
@@ -432,18 +428,46 @@ if ($embeddedInvoiceId) {
 }
 
 // ===================================================================
+// UPDATE INVOICE STATUS - Use Created Invoice ID
+// ===================================================================
+
+echo "7. Updating invoice status\n";
+echo "-------------------\n";
+
+if ($createdInvoiceId) {
+    $statusData = [
+        'status' => 'void'
+    ];
+
+    try {
+        $response = $businessGateway->invoiceService()->updateInvoiceStatus($createdInvoiceId, $statusData);
+
+        if ($response->isSuccessful()) {
+            echo 'Invoice status updated to: ' . $statusData['status'] . ' for invoice: ' . $createdInvoiceId . "\n";
+        } else {
+            echo 'Error updating invoice status: ' . $response->getErrors()->getMessage() . "\n";
+        }
+    } catch (FasterPay\Exception $e) {
+        echo 'Exception updating invoice status: ' . $e->getMessage() . "\n";
+    }
+}
+
+// ===================================================================
 // DOWNLOAD INVOICE PDF - Use Created Invoice ID
 // ===================================================================
+
+echo "8. Downloading invoice PDF\n";
+echo "-------------------\n";
 
 if ($createdInvoiceId) {
     try {
         $response = $businessGateway->invoiceService()->downloadInvoicePdf($createdInvoiceId);
-        
+
         if ($response->isSuccessful()) {
-            $pdfContent = $response->getRaw();
+            $pdfContent = $response->getRawResponse();
             echo 'PDF downloaded successfully for: ' . $createdInvoiceId . "\n";
             echo 'PDF size: ' . strlen($pdfContent) . ' bytes' . "\n";
-            
+
             // Save to file if needed
             // file_put_contents('invoice_' . $createdInvoiceId . '.pdf', $pdfContent);
         } else {

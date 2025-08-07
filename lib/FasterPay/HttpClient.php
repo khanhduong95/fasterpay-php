@@ -37,11 +37,11 @@ class HttpClient
     {
         $testParams = $params;
         $files = $this->extractFiles($testParams);
-        
+
         if (!empty($files)) {
             return $this->postMultipart($endpoint, $params, $headers);
         }
-        
+
         return $this->call($endpoint, $params, 'POST', $headers);
     }
 
@@ -49,12 +49,12 @@ class HttpClient
     {
         $testParams = $params;
         $files = $this->extractFiles($testParams);
-        
+
         if (!empty($files)) {
             $params['_method'] = 'PUT';
             return $this->postMultipart($endpoint, $params, $headers);
         }
-        
+
         return $this->call($endpoint, $params, 'PUT', $headers);
     }
 
@@ -68,18 +68,18 @@ class HttpClient
         $ch = $this->init();
 
         $header = array_merge($this->header, $headers);
-        
+
         $header = array_filter($header, function($h) {
             return stripos($h, 'Content-Type:') !== 0;
         });
-        
+
         curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_URL, $endpoint);
 
         $files = $this->extractFiles($params);
         $postData = [];
-        
+
         $this->buildPostData($params, $postData, '');
 
         foreach ($files as $fieldName => $fileValue) {
@@ -121,7 +121,7 @@ class HttpClient
     {
         foreach ($data as $key => $value) {
             $currentKey = $prefix ? $prefix . '[' . $key . ']' : $key;
-            
+
             if (is_array($value)) {
                 $this->buildPostData($value, $postData, $currentKey);
             } else {
@@ -141,7 +141,7 @@ class HttpClient
     {
         foreach ($params as $key => $value) {
             $currentKey = $prefix ? $prefix . '[' . $key . ']' : $key;
-            
+
             if (is_array($value)) {
                 $this->extractFilesRecursive($params[$key], $files, $currentKey);
             } elseif ($this->isFileObject($value)) {
@@ -154,10 +154,10 @@ class HttpClient
     private function isFileObject($value)
     {
         if (is_object($value)) {
-            return $value instanceof \CURLFile || 
-                   (class_exists('SplFileInfo') && $value instanceof \SplFileInfo) ||
-                   (class_exists('finfo') && method_exists($value, 'getPathname')) ||
-                   method_exists($value, '__toString');
+            return $value instanceof \CURLFile ||
+                (class_exists('SplFileInfo') && $value instanceof \SplFileInfo) ||
+                (class_exists('finfo') && method_exists($value, 'getPathname')) ||
+                method_exists($value, '__toString');
         }
 
         if (is_string($value) && !empty($value)) {

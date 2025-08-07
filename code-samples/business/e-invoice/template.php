@@ -90,7 +90,7 @@ try {
         echo "Template details retrieved\n";
         $data = $response->getDecodeResponse();
         $template = $data['data'] ?: [];
-        
+
         echo "  ID: " . ($template['id'] ?: $templateId) . "\n";
         echo "  Name: " . ($template['name'] ?: 'N/A') . "\n";
         echo "  Country: " . ($template['country_code'] ?: 'N/A') . "\n";
@@ -116,7 +116,7 @@ try {
         $data = $response->getDecodeResponse();
         $templates = $data['data']['data'] ?: [];
         echo "  Found " . count($templates) . " templates\n";
-        
+
         foreach ($templates as $template) {
             $id = $template['id'] ?: 'Unknown';
             $name = $template['name'] ?: 'Unnamed';

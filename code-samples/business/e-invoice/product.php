@@ -59,7 +59,7 @@ try {
         echo "Product details retrieved\n";
         $data = $response->getDecodeResponse();
         $product = $data['data'] ?: [];
-        
+
         echo "  ID: " . ($product['id'] ?: $productId) . "\n";
         echo "  SKU: " . ($product['sku'] ?: 'N/A') . "\n";
         echo "  Name: " . ($product['name'] ?: 'N/A') . "\n";
@@ -115,9 +115,9 @@ try {
     if ($response->isSuccessful()) {
         echo "Products retrieved successfully\n";
         $data = $response->getDecodeResponse();
-        $products = $data['data'] ?: [];
+        $products = $data['data']['data'] ?: [];
         echo "  Found " . count($products) . " products\n";
-        
+
         foreach ($products as $product) {
             $id = $product['id'] ?: 'Unknown';
             $name = $product['name'] ?: 'Unnamed';

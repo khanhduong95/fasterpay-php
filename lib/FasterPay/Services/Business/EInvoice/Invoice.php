@@ -6,6 +6,13 @@ use FasterPay\Exception;
 use FasterPay\Response\GeneralResponse;
 use FasterPay\Services\GeneralService;
 
+/**
+ * FasterPay E-Invoice Service
+ *
+ * Main component service for handling FasterPay e-invoice operations
+ * Follows the same architecture as other business services
+ * Uses PHP 5.4+ latest syntax
+ */
 class Invoice extends GeneralService
 {
     protected $endpoint = 'api/external/invoices';
@@ -19,10 +26,7 @@ class Invoice extends GeneralService
     public function createInvoice(array $params = [])
     {
         $endpoint = $this->httpService->getEndPoint($this->endpoint);
-
-        // For multipart/form-data requests
-        $response = $this->httpService->getHttpClient()->postMultipart($endpoint, $params);
-
+        $response = $this->httpService->getHttpClient()->post($endpoint, $params);
         return new GeneralResponse($response);
     }
 
@@ -30,19 +34,31 @@ class Invoice extends GeneralService
      * Get e-invoice details
      *
      * @param string $invoiceId Invoice ID
+     * @param array $params Optional query parameters (include, etc.)
      * @return GeneralResponse
      * @throws Exception
      */
-    public function getInvoice($invoiceId = '')
+    public function getInvoice($invoiceId = '', array $params = [])
     {
         if (empty($invoiceId)) {
             throw new Exception('Invoice ID is required');
         }
 
         $endpoint = $this->httpService->getEndPoint($this->endpoint . '/' . $invoiceId);
+        $response = $this->httpService->getHttpClient()->get($endpoint, $params);
+        return new GeneralResponse($response);
+    }
 
-        $response = $this->httpService->getHttpClient()->get($endpoint);
-
+    /**
+     * List invoices with optional filters
+     *
+     * @param array $filters Optional filters (limit, offset, status, etc.)
+     * @return GeneralResponse
+     */
+    public function listInvoices(array $filters = [])
+    {
+        $endpoint = $this->httpService->getEndPoint($this->endpoint);
+        $response = $this->httpService->getHttpClient()->get($endpoint, $filters);
         return new GeneralResponse($response);
     }
 
@@ -61,13 +77,81 @@ class Invoice extends GeneralService
         }
 
         $endpoint = $this->httpService->getEndPoint($this->endpoint . '/' . $invoiceId);
+        $response = $this->httpService->getHttpClient()->put($endpoint, $params);
+        return new GeneralResponse($response);
+    }
 
-        // Add _method=PUT for update via POST
-        $params['_method'] = 'PUT';
+    /**
+     * Update invoice status
+     *
+     * @param string $invoiceId Invoice ID
+     * @param array $params Status parameters
+     * @return GeneralResponse
+     * @throws Exception
+     */
+    public function updateInvoiceStatus($invoiceId = '', array $params = [])
+    {
+        if (empty($invoiceId)) {
+            throw new Exception('Invoice ID is required');
+        }
 
-        // For multipart/form-data requests
-        $response = $this->httpService->getHttpClient()->postMultipart($endpoint, $params);
+        $endpoint = $this->httpService->getEndPoint($this->endpoint . '/' . $invoiceId . '/status');
+        $response = $this->httpService->getHttpClient()->put($endpoint, $params);
+        return new GeneralResponse($response);
+    }
 
+    /**
+     * Preview invoice (get HTML)
+     *
+     * @param string $invoiceId Invoice ID
+     * @return GeneralResponse
+     * @throws Exception
+     */
+    public function previewInvoice($invoiceId = '')
+    {
+        if (empty($invoiceId)) {
+            throw new Exception('Invoice ID is required');
+        }
+
+        $endpoint = $this->httpService->getEndPoint($this->endpoint . '/' . $invoiceId . '/preview');
+        $response = $this->httpService->getHttpClient()->get($endpoint);
+        return new GeneralResponse($response);
+    }
+
+    /**
+     * Download invoice PDF
+     *
+     * @param string $invoiceId Invoice ID
+     * @return GeneralResponse
+     * @throws Exception
+     */
+    public function downloadInvoicePdf($invoiceId = '')
+    {
+        if (empty($invoiceId)) {
+            throw new Exception('Invoice ID is required');
+        }
+
+        $endpoint = $this->httpService->getEndPoint($this->endpoint . '/' . $invoiceId . '/pdf');
+        $response = $this->httpService->getHttpClient()->get($endpoint);
+        return new GeneralResponse($response);
+    }
+
+    /**
+     * Send invoice to customer
+     *
+     * @param string $invoiceId Invoice ID
+     * @param array $params Send parameters (test, etc.)
+     * @return GeneralResponse
+     * @throws Exception
+     */
+    public function sendInvoice($invoiceId = '', array $params = [])
+    {
+        if (empty($invoiceId)) {
+            throw new Exception('Invoice ID is required');
+        }
+
+        $endpoint = $this->httpService->getEndPoint($this->endpoint . '/' . $invoiceId . '/send');
+        $response = $this->httpService->getHttpClient()->post($endpoint, $params);
         return new GeneralResponse($response);
     }
 
@@ -85,65 +169,7 @@ class Invoice extends GeneralService
         }
 
         $endpoint = $this->httpService->getEndPoint($this->endpoint . '/' . $invoiceId);
-
         $response = $this->httpService->getHttpClient()->delete($endpoint);
-
         return new GeneralResponse($response);
-    }
-
-    /**
-     * List e-invoices
-     *
-     * @param array $filters Optional filters
-     * @return GeneralResponse
-     */
-    public function listInvoices(array $filters = [])
-    {
-        $endpoint = $this->httpService->getEndPoint($this->endpoint);
-
-        $response = $this->httpService->getHttpClient()->get($endpoint, $filters);
-
-        return new GeneralResponse($response);
-    }
-
-    /**
-     * Send e-invoice
-     *
-     * @param string $invoiceId Invoice ID
-     * @param array $sendParams Send parameters
-     * @return GeneralResponse
-     * @throws Exception
-     */
-    public function sendInvoice($invoiceId = '', array $sendParams = [])
-    {
-        if (empty($invoiceId)) {
-            throw new Exception('Invoice ID is required');
-        }
-
-        $endpoint = $this->httpService->getEndPoint($this->endpoint . '/' . $invoiceId . '/send');
-
-        $response = $this->httpService->getHttpClient()->post($endpoint, $sendParams);
-
-        return new GeneralResponse($response);
-    }
-
-    /**
-     * Download e-invoice PDF
-     *
-     * @param string $invoiceId Invoice ID
-     * @param array $options Download options
-     * @return array Raw file response array with 'response' and 'httpCode'
-     * @throws Exception
-     */
-    public function downloadInvoicePdf($invoiceId = '', array $options = [])
-    {
-        if (empty($invoiceId)) {
-            throw new Exception('Invoice ID is required');
-        }
-
-        $endpoint = $this->httpService->getEndPoint($this->endpoint . '/' . $invoiceId . '/pdf');
-
-        // Return raw response for file download
-        return $this->httpService->getHttpClient()->get($endpoint, $options);
     }
 }
