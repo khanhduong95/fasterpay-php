@@ -91,7 +91,7 @@ class Product extends GeneralService
     /**
      * List products with optional filters
      *
-     * @param array $filters Optional filters (limit, offset, sku, type, etc.)
+     * @param array $filters Optional filters
      * @return GeneralResponse
      */
     public function listProducts(array $filters = [])

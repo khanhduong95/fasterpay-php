@@ -86,7 +86,7 @@ class Template extends GeneralService
     /**
      * List templates
      *
-     * @param array $filters Optional filters (page, per_page, filter)
+     * @param array $filters Optional filters
      * @return GeneralResponse
      */
     public function listTemplates(array $filters = [])

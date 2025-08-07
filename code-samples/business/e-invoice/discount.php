@@ -172,8 +172,8 @@ echo "6. Listing discounts\n";
 echo "--------------------\n";
 
 $filters = [
-    'limit' => 10,
-    'offset' => 0
+    'per_page' => 20,
+    'page' => 1
 ];
 
 try {

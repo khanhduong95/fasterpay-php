@@ -110,7 +110,10 @@ echo "4. Listing products\n";
 echo "-------------------\n";
 
 try {
-    $response = $businessGateway->invoiceProductService()->listProducts(['limit' => 10, 'offset' => 0]);
+    $response = $businessGateway->invoiceProductService()->listProducts([
+        'per_page' => 20,
+        'page' => 1
+    ]);
 
     if ($response->isSuccessful()) {
         echo "Products retrieved successfully\n";

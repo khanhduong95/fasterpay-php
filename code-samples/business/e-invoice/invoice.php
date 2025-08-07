@@ -351,8 +351,8 @@ echo "4. Listing invoices\n";
 echo "-------------------\n";
 
 $filters = [
-    'limit' => 10,
-    'offset' => 0,
+    'per_page' => 20,
+    'page' => 1
     'status' => 'draft',
     'include' => 'items,items.product.prices'
 ];

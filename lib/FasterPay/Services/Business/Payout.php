@@ -48,7 +48,7 @@ class Payout extends GeneralService
     /**
      * Get payout list
      *
-     * @param array $filters Optional filters (limit, offset, status, etc.)
+     * @param array $filters Optional filters
      * @return JsonResponse
      */
     public function getPayoutList(array $filters = [])

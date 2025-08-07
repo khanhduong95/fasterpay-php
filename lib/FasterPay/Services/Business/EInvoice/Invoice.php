@@ -52,7 +52,7 @@ class Invoice extends GeneralService
     /**
      * List invoices with optional filters
      *
-     * @param array $filters Optional filters (limit, offset, status, etc.)
+     * @param array $filters Optional filters
      * @return GeneralResponse
      */
     public function listInvoices(array $filters = [])

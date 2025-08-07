@@ -141,8 +141,8 @@ echo "5. Listing contacts with filters\n";
 echo "--------------------------------\n";
 
 $filters = [
-    'limit' => 25,
-    'offset' => 0
+    'per_page' => 20,
+    'page' => 1
 ];
 
 try {
@@ -150,22 +150,16 @@ try {
 
     if ($listResponse->isSuccessful()) {
         echo "Contact list retrieved successfully\n";
-        echo "  Limit: 25 contacts\n";
         
         $listData = $listResponse->getDecodeResponse();
-        if (isset($listData['data']) && is_array($listData['data'])) {
-            echo "  Found " . count($listData['data']) . " contacts\n";
+        if (isset($listData['data']['data']) && is_array($listData['data']['data'])) {
+            $contacts = $listData['data']['data'];
+            echo "  Found " . count($contacts) . " contacts\n";
             
-            // Display first few contacts
-            $contacts = array_slice($listData['data'], 0, 3);
             foreach ($contacts as $contact) {
                 $name = (isset($contact['first_name']) ? $contact['first_name'] : '') . ' ' . (isset($contact['last_name']) ? $contact['last_name'] : '');
                 $email = isset($contact['email']) ? $contact['email'] : 'No email';
                 echo "    - " . trim($name) . " (" . $email . ")\n";
-            }
-            
-            if (count($listData['data']) > 3) {
-                echo "    ... and " . (count($listData['data']) - 3) . " more\n";
             }
         }
     } else {
