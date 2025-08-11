@@ -17,8 +17,7 @@ use FasterPay\Services\Pingback;
 
 class BusinessGateway implements GatewayInterface
 {
-    const BUSINESS_API_BASE_URL = 'http://fp-ma.james.dang.linux04.php71';
-//    const BUSINESS_API_BASE_URL = 'https://business.fasterpay.com';
+    const BUSINESS_API_BASE_URL = 'https://business.fasterpay.com';
 
     protected $config;
     protected $http;
